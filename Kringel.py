@@ -9,10 +9,11 @@ import os
 
 gmsh.initialize()
 
+
 gmsh.open('./Analogieprüfstand_Spanraum.STEP')
 
 Zoom = 70
-Anzahl = 100
+Anzahl = 50
 t = np.linspace(0.38, 3, Anzahl+1) #erzeugt 5 Punkte (letzter Eintrag) von 0-5 (ersten zwei Einträge)
 sin, cos = np.sqrt(fresnel(t)) #fresnelintegral erzeugen
 x = ((sin)*Zoom)-7.46
@@ -68,61 +69,75 @@ coordsd = list(zip(resultdx, resultdy, resultz))
 coordsdb = list(zip(resultdx, resultdy, resultb))
 
 
-index1 = 100
-index2 = 200
-index3 = 300
-index4 = 400
+index1 = 1000
+index1list=[]
+index2 = 2000
+index2list=[]
+index3 = 3000
+index3list=[]
+index4 = 4000
+index4list=[]
 
 
 #über jede Koordinatenpackung iterieren
 for [x,y,z] in (coords[:-1]):
-        gmsh.model.geo.addPoint(x, y, z, lc, index1)
+        gmsh.model.occ.addPoint(x, y, z, lc, index1)
+        index1list.append(index1)
         index1+=1
-
+        
 for i in range(Anzahl-1):
-    gmsh.model.geo.addLine(index1-1,index1-2)
+    gmsh.model.occ.addSpline([index1-1,index1-2])
     index1-=1
+
+#gmsh.model.occ.addSpline(index1list)
+
 
 #dem ganzen ding eine Breite geben
 for [x,y,b] in (coordsb[:-1]):
-        gmsh.model.geo.addPoint(x, y, b, lc, index3)
+        gmsh.model.occ.addPoint(x, y, b, lc, index3)
+        index3list.append(index3)
         index3+=1
 
 for i in range(Anzahl-1):
-    gmsh.model.geo.addLine(index3-1,index3-2)
+    gmsh.model.occ.addSpline([index3-1,index3-2])
     index3-=1
-        
+      
+#gmsh.model.occ.addSpline(index3list)
+
 for [xc,yc,z] in coordsd:
-        gmsh.model.geo.addPoint(xc, yc, z, lc, index2)
+        gmsh.model.occ.addPoint(xc, yc, z, lc, index2)
+        index2list.append(index2)
         index2+=1
 
 for i in range(Anzahl-1):
-    gmsh.model.geo.addLine(index2-1,index2-2)
+    gmsh.model.occ.addSpline([index2-1,index2-2])
     index2-=1
 
-for [xc,yc,b] in coordsdb:
-        gmsh.model.geo.addPoint(xc, yc, b, lc, index4)
-        index4+=1
-  
-for i in range(Anzahl-1):
-    gmsh.model.geo.addLine(index4-1,index4-2)
-    index4-=1
-    
-#Punktwolke verbinden
-gmsh.model.geo.addSpline([index1-1,index2-1])
-gmsh.model.geo.addSpline([index2-1,index4-1])
-gmsh.model.geo.addSpline([index3-1,index4-1])
-gmsh.model.geo.addSpline([index3-1,index1-1])
-  
-gmsh.model.geo.addSpline([(index1-2)+Anzahl,(index2-2)+Anzahl])
-gmsh.model.geo.addSpline([(index2-2)+Anzahl,(index4-2)+Anzahl])
-gmsh.model.geo.addSpline([(index3-2)+Anzahl,(index4-2)+Anzahl])
-gmsh.model.geo.addSpline([(index3-2)+Anzahl,(index1-2)+Anzahl])  
+#gmsh.model.occ.addSpline(index2list)
 
-gmsh.model.geo.synchronize()
+for [xc,yc,b] in coordsdb:
+        gmsh.model.occ.addPoint(xc, yc, b, lc, index4)
+        index4list.append(index4)
+        index4+=1
+
+for i in range(Anzahl-1):
+    gmsh.model.occ.addSpline([index4-1,index4-2])
+    index4-=1
+  
+#gmsh.model.occ.addSpline(index4list)
+
+  
+
+#Punktwolke verbinden
+gmsh.model.occ.addSpline([index1-1,index2-1])
+gmsh.model.occ.addSpline([index2-1,index4-1])
+gmsh.model.occ.addSpline([index3-1,index4-1])
+gmsh.model.occ.addSpline([index3-1,index1-1])
+
+
+gmsh.model.occ.synchronize()
 gmsh.model.mesh.generate(1)
 gmsh.write("Kringel.msh")
-# start with empty model again
 gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
