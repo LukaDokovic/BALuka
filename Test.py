@@ -6,10 +6,10 @@ import math
 import os
 
 gmsh.initialize()
-gmsh.open('./Stroemungsgebiet_mit_Spalt.STEP')
+gmsh.open('./Stroemungsgebiet_Symmetrisch_2.STEP')
 gmsh.model.occ.synchronize()
 gmsh.model.mesh.generate(1)
-gmsh.write("Kringel.msh")
+gmsh.write("Test.msh")
 gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()

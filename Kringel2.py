@@ -1,45 +1,63 @@
+"""Herzlich Willkommen zum Dokovic'en Kringel"""
+
 import numpy as np
 from scipy.special import fresnel
 import gmsh
 import sys
 import math
 import os
+
+"""Was wirkt wie ein einfacher schlechter Witz ist tatsächlich sehr wichtig... Es gibt in PyGMSH zwei Möglichkeiten Geometrien zu erstellen: mit dem GEO und dem OCC Kern. Entschließt man sich ein davon zu nehmen kann man nicht mehr tauschen bzw zwischendrin einfach wechseln denn die Geometrien wären sonst unvollständig. Da hier für den Spanraum eine STEP Datei eingelesen wird müssen wir den OCC Kern von GMSH verwenden. Um keine Fehler zu machen kürze ich das hier einmal ab. Der Name allerdings ist tatsächlich nur ein schlechter Witz. 
+Als nächstes wird gmsh gestartet und der Spanraum eingelesen."""
+
 Spandau = gmsh.model.occ
 gmsh.initialize()
-gmsh.open('./Stroemungsgebiet_mit_Spalt.STEP')
+gmsh.open('./Stroemungsgebiet_Symmetrisch_2.STEP')
 
-Zoom = 70
-Anzahl = 2
-Start = 0.38
-Ende = 0.5
-xVerschiebung = -7.47
-yVerschiebung = -38
-t = np.linspace(Start, Ende, Anzahl+1) #erzeugt 5 Punkte (letzter Eintrag) von 0-5 (ersten zwei Einträge)
-sin, cos = np.sqrt(fresnel(t)) #fresnelintegral erzeugen
-x = ((sin)*Zoom)+xVerschiebung
-y = ((cos)*Zoom)+yVerschiebung
-z = t * 0 - 1.5 #verschiebung in z
-b = z - 25 #breite
-dicke = 1
-lc = 1e-2
+"""Im folgenden erzeugen wir den Kringel mithilfe der Fresnel-Integrale sowie bereits einige Parameter des Spans"""
 
-resultdx = [] #arrays für die Koordinaten der Normalenvektoren
-resultdy = []
+zoom = 70 #Größe des Kringels
+quantity = 50 #Anzahl der Punkte des Kringels
+start = 0.38 #Startpunkt des Kringels
+end = 3 #Endpunkt des Kringels
+xShift = -7.47 #Verschiebung in X-Richtung
+yShift = -38 #Verschiebung in Y-Richtung
+zShift = 0 #Verschiebung in Z-Richtung
+wide = 12.5 #Breite des Spans
+thick = 1 #Dicke des Spans
+lc = 3.0 #Netzdichte an den Punkten
+
+t = np.linspace(start, end, quantity+1) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
+sin, cos = np.sqrt(fresnel(t)) #Erzeugt das Fresnelintegral
+x = ((sin)*zoom) + xShift #Fügt alle Parameter für X und Y zusammen und erzeugt die X und Y Koordinaten
+y = ((cos)*zoom) + yShift
+z = t * 0 + zShift #Lage der Symmatrieachse
+b = z + wide #Breite des Kringels
+
+"""Um dem Span eine Dicke zu geben benötigt man einen zweiten Kringel der in jedem Punkt parallel ist zum Original. Damit der Abstand verstellbar ist und auch sicher gewährleistet ist das der zweite Kringel immer parallel ist wird für jeden Punkt des Originalen Kringels der Einheitsnormalenvekotor errechnet und mit der gewünschten Dicke multipliziert. Abschließend wird der jeweilige Vekotor auf den jeweiligen Punkt addiert um die Koordinaten des parallelen Kringels zu erhalten."""
 
 #Funktion für die Normalenvektoren
-for idx in range(len(x)-1):
-    x0, y0, x1, y1 = x[idx], y[idx], x[idx+1], y[idx+1]
-    dx = x1-x0
-    dy = y1-y0
-    norm = math.hypot(dx, dy) * 1/dicke
-    dx /= norm
-    dy /= norm
-    xc = x0-dy
-    yc = y0+dx
-    resultdx.append(xc)
-    resultdy.append(yc)
-    
-#x,y,zGMSH Koordinaten in einzelne Arrays
+
+def normal(xValue, yValue, xList, yList):
+    for idx in range(len(x)-1):
+        x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
+        dx = x1-x0 #Ableitungen
+        dy = y1-y0
+        norm = math.hypot(dx, dy) * 1/thick #Normierung
+        dx /= norm
+        dy /= norm
+        xc = x0-dy #Vekotor+Original
+        yc = y0+dx
+        xList.append(xc)#Einfügen in die Arrays
+        yList.append(yc)
+        
+resultdx = [] #Arrays für die Koordinaten der Normalenvektoren, müssen global sein (also außerhalb der funktion deklariert) um in jedem Punkt des Programms darauf zugreifen zu können
+resultdy = []
+
+normal(x, y, resultdx, resultdy)#Normalenvektoren für den originalen Kringel werden erstellt
+
+"""die Anzahl der Elemente wird in einer einfachen Liste erfasst, über jedes Element wird rüber iteriert und in einem Array gespeichert"""
+
 coordsx = (x)
 resultx = []
 for x in coordsx:
@@ -60,16 +78,17 @@ resultb =[]
 for b in coordsb:
     resultb.append(b) 
     
-#Koordinaten zusammenfügen
-coords = list(zip(resultx, resulty, resultz))
+"""die einzelnen Koordinaten werden hier zusammengefügt. Von 1D Koordinaten zu 3D Koordinaten. Da der Span nicht nur in der z=0 Ebene entwickelt wird werden Span und Normalenkoordinaten auf die z=b Ebene projeziert. Also insgesamt erhalten wir am ende 4 Kringel. Original und Paralleler jeweils auf den zwei Ebenen."""
 
-coordsb = list(zip(resultx, resulty, resultb))
+coords1 = list(zip(resultx, resulty, resultz)) #Kringel
+coords1n = list(zip(resultdx, resultdy, resultz)) #Paralleler Kringel
+coords2 = list(zip(resultx, resulty, resultb))
+coords2n = list(zip(resultdx, resultdy, resultb))
 
-coordsd = list(zip(resultdx, resultdy, resultz))
+"""Um jede einzelne Koordinate auch in GMSH wieder gefunden werden kann, wird hier für jeden Punkt ein Index festgelegt. Zumindest wird hier die Dimension des Index festgelegt. Indexe dürfen niemals doppelt vergeben werden. Um eine möglichst hohe Flexibilität der Punkte zu haben beginnen die Punktindexe im tausender Bereich. nicht vergessen: Der Spanraum wurde natürlich durch GMSH schon mit netsprechenden Punkten, Splines, Geometrien etc. versehen. Diese Geometrien haben natürlich auch schon Tags die nicht doppelt vergeben werden dürfen. Zusätzlich werden alle Punktindexe in einem jeweiligen Array gespeichert. Dies hat auf den ersten Blick keinen weiteren Nutzen, jedoch kann man so immer Kontrollieren wo der Fehler liegt falls es einen gibt. Das ist auch der Hauptgrund warum von jeder bisherigen Koordinate ein array angelegt wurde. Entsteht ein Fehler oder wird etwas faslch eingetragen, soist durch print(gewünschteListe) eine genaue nachverfolgung von GMSH tag bis 1D Koordinate möglich.für die gewünschte Kontrolle einfach die folgende Zeile einkommentieren"""
 
-coordsdb = list(zip(resultdx, resultdy, resultb))
+#print(coords1)
 
-#Punkte
 index1 = 1000 #Original Kringel
 index1list=[]
 index2 = 2000 #1. Normalenvektor
@@ -79,67 +98,73 @@ index3list=[]
 index4 = 4000 #2. Normalenvektor
 index4list=[]
 
+#über jede Koordinatenpackung iterieren und in GMSH eintragen
 
-#über jede Koordinatenpackung iterieren
-for [x,y,z] in (coords[:-1]):
+for [x,y,z] in (coords1[:-1]):
         Spandau.addPoint(x, y, z, lc, index1)
         index1list.append(index1)
         index1+=1
-        
-Spandau.addBSpline(index1list, degree=2, tag=10000) #OriginalKringel
 
-
-#dem ganzen ding eine Breite geben
-for [x,y,b] in (coordsb[:-1]):
+for [x,y,b] in (coords2[:-1]):
         Spandau.addPoint(x, y, b, lc, index3)
         index3list.append(index3)
         index3+=1
-    
-Spandau.addBSpline(index3list, degree=2, tag=30000) #Projektion des Kringels
 
-for [xc,yc,z] in coordsd:
+for [xc,yc,z] in coords1n:
         Spandau.addPoint(xc, yc, z, lc, index2)
         index2list.append(index2)
         index2+=1
 
-Spandau.addBSpline(index2list, degree=2, tag=20000) #1.Normalenvektor
-
-for [xc,yc,b] in coordsdb:
+for [xc,yc,b] in coords2n:
         Spandau.addPoint(xc, yc, b, lc, index4)
         index4list.append(index4)
         index4+=1
  
-Spandau.addBSpline(index4list, degree=2, tag=40000) #2.Normalenvektor
-  
+#Die vier endpunkte werden hier durch BSplines zu einer Vierecksform verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
 
-#Das ende des spans verbinden
-Spandau.addBSpline([index1-1,index2-1], degree=1, tag=50000) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([index2-1,index4-1], degree=1, tag=50001) #verbindet Normale mit Normale (lang)
-Spandau.addBSpline([index3-1,index4-1], degree=1, tag=50002) #verbindet Projektion mit Normale (kurz)
-Spandau.addBSpline([index3-1,index1-1], degree=1, tag=50003) #verbindet Original mit Projektion (lang)
+Spandau.addBSpline([index1-1,index2-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
+Spandau.addBSpline([index2-1,index4-1], degree=1, tag=6001) #verbindet Normale mit Normale (lang)
+Spandau.addBSpline([index3-1,index4-1], degree=1, tag=6002) #verbindet Projektion mit Normale (kurz)
+Spandau.addBSpline([index3-1,index1-1], degree=1, tag=6003) #verbindet Original mit Projektion (lang)
 
+"""Die Kringelgeometrie wurde nun erstellt es gilt nun den Kringel mit dem Werkzeug zu verbinden. Ganz zu Beginn verläuft der Span direkt am Werkzeug entlang, dieser Teil ist fest und ohne Abstnad am Werkzeug gelegen. Um natürlich auch diesem festen Span die Entsprechende dicke zu geben wurden auch hier die Einheitsnormalenvektoren errechnet allerdings ein einziges mal von Hand und nicht durch Code. Diese Koordinaten werden nur ein mal festgelegt"""
 
+"""Der Spanbeginn (Viereck wie das Ende) besteht aus den Punkten 90,91,92,28"""
+Spandau.addPoint(thick,0,z,lc,90)
+Spandau.addPoint(thick,0,b,lc,91)
+Spandau.addPoint(0,0,b,lc,92)
+#Punkt 28
 
+Spandau.addBSpline([90,91], degree=1, tag=6004) #verbindet Original mit Projektion (lang)
+Spandau.addBSpline([91,92], degree=1, tag=6005) #verbindet Projektion mit Normale (kurz)
+#aufgrund der geometire hinzugefügt
+Spandau.addPoint(0,0,z,lc,100)
+Spandau.addBSpline([90,100], degree=1, tag=6006)#verbindet Original mit Normale (kurz)
+
+Spandau.addPoint(1,2.5,b,lc,93)
 
 #Vom Span aus Rückwärts
-tSpan1 = Start - 0.01
+tSpan1 = start - 0.01
 sinSpan1, cosSpan1 = np.sqrt(fresnel(tSpan1)) #fresnelintegral erzeugen
-xSpan1 = ((sinSpan1)*Zoom)+xVerschiebung
-ySpan1 = ((cosSpan1)*Zoom)+yVerschiebung
+xSpan1 = ((sinSpan1)*zoom)+xShift
+ySpan1 = ((cosSpan1)*zoom)+yShift
 Spandau.addPoint(xSpan1,ySpan1,z,lc,80)
 Spandau.addPoint(xSpan1,ySpan1,b,lc,81)
 
 #Normalenvektor
-tSpan = np.linspace(Start - 0.01, Start, 2)
+
+
+
+tSpan = np.linspace(start - 0.01, start, 2)
 sinSpan, cosSpan = np.sqrt(fresnel(tSpan)) #fresnelintegral erzeugen
-xSpan = ((sinSpan)*Zoom)+xVerschiebung
-ySpan = ((cosSpan)*Zoom)+yVerschiebung
+xSpan = ((sinSpan)*zoom)+xShift
+ySpan = ((cosSpan)*zoom)+yShift
 
 for idx in range(len(xSpan)-1):
     x0Span, y0Span, x1Span, y1Span = xSpan[idx], ySpan[idx], xSpan[idx+1], ySpan[idx+1]
     dxSpan = x1Span-x0Span
     dySpan = y1Span-y0Span
-    normSpan = math.hypot(dxSpan, dySpan) * 1/dicke
+    normSpan = math.hypot(dxSpan, dySpan) * 1/thick
     dxSpan /= normSpan
     dySpan /= normSpan
     xcSpan = x0Span-dySpan
@@ -148,79 +173,93 @@ for idx in range(len(xSpan)-1):
     Spandau.addPoint(xcSpan,ycSpan,b,lc,83)
 
 
-#Fester Span
-Spandau.addPoint(dicke,0,z,lc,90)
-Spandau.addPoint(dicke,0,b,lc,91)
-Spandau.addPoint(0,0,b,lc,92)
-Spandau.addPoint(1,2.5,b,lc,93)
 
-
-#Anfang des Spans
-Spandau.addBSpline([90,91], degree=1, tag=50004) #verbindet Original mit Projektion (lang)
-Spandau.addBSpline([91,92], degree=1, tag=50005) #verbindet Projektion mit Normale (kurz)
-#aufgrund der geometire hinzugefügt
-Spandau.addPoint(0,0,z,lc,100)
-Spandau.addBSpline([90,100], degree=1, tag=50006)#verbindet Original mit Normale (kurz)
 
 
 
 #verbindet Normale mit Normale (lang) wird gegeben durch Linie 44 (bereits im Modell
 #??? ersatz für Linie 44
-Spandau.addBSpline([100,92],degree=1, tag=50009)
+Spandau.addBSpline([100,92],degree=1, tag=6009)
 
 norm2 = 1/np.sqrt(1+np.square(2.5))
-Spanx = dicke * (-2.5*norm2)
-Spany = dicke * (1*norm2)
+Spanx = thick * (-2.5*norm2)
+Spany = thick * (1*norm2)
 Spandau.addPoint(1-Spanx,2.5-Spany,z,lc,94)
 Spandau.addPoint(1-Spanx,2.5-Spany,b,lc,95)
 
 abstand = (np.sqrt(np.square(xcSpan-1)+np.square(ycSpan-2.5)))
-vektorx = norm2*(abstand/4)
-vektory = norm2*(abstand/4)*2.5
+vektorx = norm2*(abstand/5)
+vektory = norm2*(abstand/5)*2.5
 Spandau.addPoint(1+vektorx, 2.5+vektory,z,lc,96)
 Spandau.addPoint(1+vektorx, 2.5+vektory,b,lc,97)
 Spandau.addPoint((1+vektorx)-Spanx, (2.5+vektory)-Spany,z,lc,98)
 Spandau.addPoint((1+vektorx)-Spanx, (2.5+vektory)-Spany,b,lc,99)
 
-Spandau.addBSpline([90,94,98,80,1000], degree=3, tag=60001) #OriginalKringel
-Spandau.addBSpline([91,95,99,81,3000], degree=3, tag=60002) #Projektion des Kringels
-Spandau.addBSpline([12,96,82,2000], degree=3, tag=60003) #1. Nomalenvektor
-Spandau.addBSpline([93,97,83,4000], degree=3, tag=60004) #2. Normalenvektor
 
 
 #wegen neuer geometrie Splines am festen Span
-Spandau.addBSpline([12,100], degree=1, tag=50007)
-Spandau.addBSpline([11,92], degree=1, tag=50008)
+Spandau.addBSpline([12,100], degree=1, tag=6007)
+Spandau.addBSpline([11,92], degree=1, tag=6008)
 
 
 
-"""
+
+
+
+
+
+
+
+
+
+index1list.insert(0, 80)
+index1list.insert(0, 98)
+index1list.insert(0, 94)
+index1list.insert(0, 90)
+
+index3list.insert(0, 81)
+index3list.insert(0, 99)
+index3list.insert(0, 95)
+index3list.insert(0, 91)
+
+index2list.insert(0, 82)
+index2list.insert(0, 96)
+index2list.insert(0, 12)
+
+index4list.insert(0, 83)
+index4list.insert(0, 97)
+index4list.insert(0, 11)
+
+
+Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
+Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
+Spandau.addBSpline(index2list, degree=3, tag=20000) #1.Normalenvektor
+Spandau.addBSpline(index4list, degree=3, tag=40000) #2.Normalenvektor
+
 #Flächen
 
-#Flächen links und rechts (dicke) des Spans
-Spandau.addCurveLoop([50006,60001,10000,50000,20000,60003,50007], tag = 70001)
-Spandau.addCurveLoop([50005,60002,30000,50002,40000,60004,50008], tag = 70002)
-Spandau.addPlaneSurface([70001], 100001)
-Spandau.addPlaneSurface([70002], 100002)
+#Flächen links und rechts (thick) des Spans
+Spandau.addCurveLoop([6006,10000,6000,20000,6007], tag = 70001)
+Spandau.addCurveLoop([6005,30000,6002,40000,6008], tag = 70002)
 
-
-#Flächen an Anfang und Ende des Spans
-Spandau.addCurveLoop([50004,50006,50009,50005], tag = 80005)
-Spandau.addCurveLoop([50000,50001,50002,50003], tag = 80006)
-Spandau.addPlaneSurface([80005], 100005)
-Spandau.addPlaneSurface([80006], 100006)
+#Flächen an Anfang und end des Spans
+Spandau.addCurveLoop([6004,6006,6009,6005], tag = 80005)
+Spandau.addCurveLoop([6000,6001,6002,6003], tag = 80006)
 
 #Flächen oben und unten vom Span
-Spandau.addCurveLoop([11,60003,20000,50001,40000,60004], tag = 90003)
-Spandau.addCurveLoop([50004,60001,10000,50003,30000,60002], tag = 90004)
-#Spandau.addSurfaceFilling(90004 , tag=100007, pointTags=[90,91,1010])
-Spandau.addThruSections([70001,70002],999)
+#Spandau.addCurveLoop([11,20000,6001,40000], tag = 90003)
+Spandau.addCurveLoop([6004,10000,6003,30000], tag = 90004)
 
-"""
+#Spandau.addThruSections([70001,70002])
+
+#gmsh.model.occ.cut([(3,1)],[(3,2)],3)
 
 Spandau.synchronize()
+
+#gmsh.model.addPhysicalGroup(3, [3], 2)
 gmsh.model.mesh.generate(1)
 gmsh.write("Kringel.msh")
-gmsh.fltk.run()
+if '-nopopup' not in sys.argv:
+    gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
