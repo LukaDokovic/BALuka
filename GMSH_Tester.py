@@ -1,128 +1,109 @@
 # ------------------------------------------------------------------------------
 #
-#  Gmsh Python tutorial 16
+#  Gmsh Python tutorial 20
 #
-#  Constructive Solid Geometry, OpenCASCADE geometry kernel
+#  STEP import and manipulation, geometry partitioning
 #
 # ------------------------------------------------------------------------------
 
-# Instead of constructing a model in a bottom-up fashion with Gmsh's built-in
-# geometry kernel, starting with version 3 Gmsh allows you to directly use
-# alternative geometry kernels. Here we will use the OpenCASCADE kernel.
+# The OpenCASCADE CAD kernel allows to import STEP files and to modify them. In
+# this tutorial we will load a STEP geometry and partition it into slices.
 
 import gmsh
 import math
+import os
 import sys
 
 gmsh.initialize()
 
-gmsh.model.add("t16")
+gmsh.model.add("t20")
 
-# Let's build the same model as in `t5.py', but using constructive solid
-# geometry.
+# Load a STEP file (using `importShapes' instead of `merge' allows to directly
+# retrieve the tags of the highest dimensional imported entities):
+path = os.path.dirname(os.path.abspath(__file__))
+v = gmsh.model.occ.importShapes('./Kringel2.msh')
 
-# We can log all messages for further processing with:
-gmsh.logger.start()
+# If we had specified
+#
+# gmsh.option.setString('Geometry.OCCTargetUnit', 'M')
+#
+# before merging the STEP file, OpenCASCADE would have converted the units to
+# meters (instead of the default, which is millimeters).
 
-# We first create two cubes:
-gmsh.model.occ.addBox(0, 0, 0, 1, 1, 1, 1)
-gmsh.model.occ.addBox(0, 0, 0, 0.5, 0.5, 0.5, 2)
+# Get the bounding box of the volume:
+xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.occ.getBoundingBox(
+    v[0][0], v[0][1])
 
-# We apply a boolean difference to create the "cube minus one eigth" shape:
-gmsh.model.occ.cut([(3, 1)], [(3, 2)], 3)
+# We want to slice the model into N slices, and either keep the volume slices
+# or just the surfaces obtained by the cutting:
 
-# Boolean operations with OpenCASCADE always create new entities. By default the
-# extra arguments `removeObject' and `removeTool' in `cut()' are set to `True',
-# which will delete the original entities.
+N = 5  # Number of slices
+dir = 'X' # Direction: 'X', 'Y' or 'Z'
+surf = False  # Keep only surfaces?
 
-# We then create the five spheres:
-x = 0
-y = 0.75
-z = 0
-r = 0.09
-holes = []
-for t in range(1, 6):
-    x += 0.166
-    z += 0.166
-    gmsh.model.occ.addSphere(x, y, z, r, 3 + t)
-    holes.append((3, 3 + t))
+dx = (xmax - xmin)
+dy = (ymax - ymin)
+dz = (zmax - zmin)
+L = dz if (dir == 'X') else dx
+H = dz if (dir == 'Y') else dy
 
-# If we had wanted five empty holes we would have used `cut()' again. Here we
-# want five spherical inclusions, whose mesh should be conformal with the mesh
-# of the cube: we thus use `fragment()', which intersects all volumes in a
-# conformal manner (without creating duplicate interfaces):
-ov, ovv = gmsh.model.occ.fragment([(3, 3)], holes)
+# Create the first cutting plane:
+s = []
+s.append((2, gmsh.model.occ.addRectangle(xmin, ymin, zmin, L, H)))
+if dir == 'X':
+    gmsh.model.occ.rotate([s[0]], xmin, ymin, zmin, 0, 1, 0, -math.pi/2)
+elif dir == 'Y':
+    gmsh.model.occ.rotate([s[0]], xmin, ymin, zmin, 1, 0, 0, math.pi/2)
+tx = dx / N if (dir == 'X') else 0
+ty = dy / N if (dir == 'Y') else 0
+tz = dz / N if (dir == 'Z') else 0
+gmsh.model.occ.translate([s[0]], tx, ty, tz)
 
-# ov contains all the generated entities of the same dimension as the input
-# entities:
-print("fragment produced volumes:")
-for e in ov:
-    print(e)
+# Create the other cutting planes:
+for i in range(1, N-1):
+    s.extend(gmsh.model.occ.copy([s[0]]))
+    gmsh.model.occ.translate([s[-1]], i * tx, i * ty, i * tz)
 
-# ovv contains the parent-child relationships for all the input entities:
-print("before/after fragment relations:")
-for e in zip([(3, 3)] + holes, ovv):
-    print("parent " + str(e[0]) + " -> child " + str(e[1]))
+# Fragment (i.e. intersect) the volume with all the cutting planes:
+gmsh.model.occ.fragment(v, s)
+
+# Now remove all the surfaces (and their bounding entities) that are not on the
+# boundary of a volume, i.e. the parts of the cutting planes that "stick out" of
+# the volume:
+gmsh.model.occ.remove(gmsh.model.occ.getEntities(2), True)
 
 gmsh.model.occ.synchronize()
 
-# When the boolean operation leads to simple modifications of entities, and if
-# one deletes the original entities, Gmsh tries to assign the same tag to the
-# new entities. (This behavior is governed by the
-# `Geometry.OCCBooleanPreserveNumbering' option.)
+if surf:
+    # If we want to only keep the surfaces, retrieve the surfaces in bounding
+    # boxes around the cutting planes...
+    eps = 1e-4
+    s = []
+    for i in range(1, N):
+        xx = xmin if (dir == 'X') else xmax
+        yy = ymin if (dir == 'Y') else ymax
+        zz = zmin if (dir == 'Z') else zmax
+        s.extend(gmsh.model.getEntitiesInBoundingBox(
+            xmin - eps + i * tx, ymin - eps + i * ty, zmin - eps + i * tz,
+            xx + eps + i * tx, yy + eps + i * ty, zz + eps + i * tz, 2))
+    # ...and remove all the other entities (here directly in the model, as we
+    # won't modify any OpenCASCADE entities later on):
+    dels = gmsh.model.getEntities(2)
+    for e in s:
+        dels.remove(e)
+    gmsh.model.removeEntities(gmsh.model.getEntities(3))
+    gmsh.model.removeEntities(dels)
+    gmsh.model.removeEntities(gmsh.model.getEntities(1))
+    gmsh.model.removeEntities(gmsh.model.getEntities(0))
 
-# Here the `Physical Volume' definitions can thus be made for the 5 spheres
-# directly, as the five spheres (volumes 4, 5, 6, 7 and 8), which will be
-# deleted by the fragment operations, will be recreated identically (albeit with
-# new surfaces) with the same tags:
-for i in range(1, 6):
-    gmsh.model.addPhysicalGroup(3, [3 + i], i)
-
-# The tag of the cube will change though, so we need to access it
-# programmatically:
-gmsh.model.addPhysicalGroup(3, [ov[-1][1]], 10)
-
-# Creating entities using constructive solid geometry is very powerful, but can
-# lead to practical issues for e.g. setting mesh sizes at points, or identifying
-# boundaries.
-
-# To identify points or other bounding entities you can take advantage of the
-# `getEntities()', `getBoundary()' and `getEntitiesInBoundingBox()' functions:
-
-lcar1 = .1
-lcar2 = .0005
-lcar3 = .055
-
-# Assign a mesh size to all the points:
-gmsh.model.mesh.setSize(gmsh.model.getEntities(0), lcar1)
-
-# Override this constraint on the points of the five spheres:
-gmsh.model.mesh.setSize(gmsh.model.getBoundary(holes, False, False, True),
-                        lcar3)
-
-# Select the corner point by searching for it geometrically:
-eps = 1e-3
-ov = gmsh.model.getEntitiesInBoundingBox(0.5 - eps, 0.5 - eps, 0.5 - eps,
-                                         0.5 + eps, 0.5 + eps, 0.5 + eps, 0)
-gmsh.model.mesh.setSize(ov, lcar2)
-
+# Finally, let's specify a global mesh size and mesh the partitioned model:
+gmsh.option.setNumber("Mesh.MeshSizeMin", 3)
+gmsh.option.setNumber("Mesh.MeshSizeMax", 3)
 gmsh.model.mesh.generate(3)
-
-gmsh.write("t16.msh")
-
-# Additional examples created with the OpenCASCADE geometry kernel are available
-# in `t18.py', `t19.py' and `t20.py', as well as in the `examples/api'
-# directory.
-
-# Inspect the log:
-log = gmsh.logger.get()
-print("Logger has recorded " + str(len(log)) + " lines")
-gmsh.logger.stop()
+gmsh.write("t20.msh")
 
 # Launch the GUI to see the results:
 if '-nopopup' not in sys.argv:
     gmsh.fltk.run()
 
 gmsh.finalize()
-
-

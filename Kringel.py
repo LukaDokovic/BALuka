@@ -6,15 +6,14 @@ import gmsh
 import sys
 import math
 import os
-
 """Was wirkt wie ein einfacher schlechter Witz ist tatsächlich sehr wichtig... Es gibt in PyGMSH zwei Möglichkeiten Geometrien zu erstellen: mit dem GEO und dem OCC Kern. Entschließt man sich ein davon zu nehmen kann man nicht mehr tauschen bzw zwischendrin einfach wechseln denn die Geometrien wären sonst unvollständig. Da hier für den Spanraum eine STEP Datei eingelesen wird müssen wir den OCC Kern von GMSH verwenden. Um keine Fehler zu machen kürze ich das hier einmal ab. Der Name allerdings ist tatsächlich nur ein schlechter Witz. 
 Als nächstes wird gmsh gestartet und der Spanraum eingelesen."""
 
 Spandau = gmsh.model.occ
 gmsh.initialize()
-gmsh.open('./Stroemungsgebiet_mit_Spalt.STEP')
-
+gmsh.merge('./Stroemungsgebiet_Symmetrisch_2.STEP')
 """Im folgenden erzeugen wir den Kringel mithilfe der Fresnel-Integrale sowie bereits einige Parameter des Spans"""
+
 
 zoom = 70 #Größe des Kringels
 quantity = 50 #Anzahl der Punkte des Kringels
@@ -22,17 +21,19 @@ start = 0.38 #Startpunkt des Kringels
 end = 3 #Endpunkt des Kringels
 xShift = -7.47 #Verschiebung in X-Richtung
 yShift = -38 #Verschiebung in Y-Richtung
-zShift = -1.5 #Verschiebung in Z-Richtung
-wide =25 #Breite des Spans
+zShift = 0 #Verschiebung in Z-Richtung
+wide = 12 #Breite des Spans
 thick = 1 #Dicke des Spans
-lc = 3.0 #Netzdichte an den Punkten
+lc = -5.0 #Netzdichte an den Punkten des Kringels
 
 t = np.linspace(start, end, quantity+1) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
-sin, cos = np.sqrt(fresnel(t)) #Erzeugt das Fresnelintegral
+function = fresnel
+modification = np.sqrt
+sin, cos = modification(function(t)) #Erzeugt das Fresnelintegral
 x = ((sin)*zoom) + xShift #Fügt alle Parameter für X und Y zusammen und erzeugt die X und Y Koordinaten
 y = ((cos)*zoom) + yShift
 z = t * 0 + zShift #Lage der Symmatrieachse
-b = z - wide #Breite des Kringels
+b = z + wide #Breite des Kringels
 
 """Um dem Span eine Dicke zu geben benötigt man einen zweiten Kringel der in jedem Punkt parallel ist zum Original. Damit der Abstand verstellbar ist und auch sicher gewährleistet ist das der zweite Kringel immer parallel ist wird für jeden Punkt des Originalen Kringels der Einheitsnormalenvekotor errechnet und mit der gewünschten Dicke multipliziert. Abschließend wird der jeweilige Vekotor auf den jeweiligen Punkt addiert um die Koordinaten des parallelen Kringels zu erhalten."""
 
@@ -122,37 +123,52 @@ for [xc,yc,b] in coords2n:
  
 #Die vier endpunkte werden hier durch BSplines zu einer Vierecksform verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
 
-Spandau.addBSpline([index1-1,index2-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
+Spandau.addBSpline([index2-1,index1-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
 Spandau.addBSpline([index2-1,index4-1], degree=1, tag=6001) #verbindet Normale mit Normale (lang)
-Spandau.addBSpline([index3-1,index4-1], degree=1, tag=6002) #verbindet Projektion mit Normale (kurz)
+Spandau.addBSpline([index4-1,index3-1], degree=1, tag=6002) #verbindet Projektion mit Normale (kurz)
 Spandau.addBSpline([index3-1,index1-1], degree=1, tag=6003) #verbindet Original mit Projektion (lang)
 
 """Die Kringelgeometrie wurde nun erstellt es gilt nun den Kringel mit dem Werkzeug zu verbinden. Ganz zu Beginn verläuft der Span direkt am Werkzeug entlang, dieser Teil ist fest und ohne Abstnad am Werkzeug gelegen. Um natürlich auch diesem festen Span die Entsprechende dicke zu geben wurden auch hier die Einheitsnormalenvektoren errechnet allerdings ein einziges mal von Hand und nicht durch Code. Diese Koordinaten werden nur ein mal festgelegt"""
 
+"""Der Spanbeginn (Viereck wie das Ende) besteht aus den Punkten 90,91,92,28"""
 Spandau.addPoint(thick,0,z,lc,90)
 Spandau.addPoint(thick,0,b,lc,91)
 Spandau.addPoint(0,0,b,lc,92)
 Spandau.addPoint(1,2.5,b,lc,93)
-#Anfang des Spans
+
+
+Spandau.addPoint(1,2.5,z,lc,210)
+Spandau.addPoint(0,0,z,lc,211)
+Spandau.addBSpline([211,210], tag = 9999)
+Spandau.addBSpline([210,93],tag=9010)
+Spandau.addBSpline([211,210],tag=9011)
+
+
 Spandau.addBSpline([90,91], degree=1, tag=6004) #verbindet Original mit Projektion (lang)
-Spandau.addBSpline([91,92], degree=1, tag=6005) #verbindet Projektion mit Normale (kurz)
-#aufgrund der geometire hinzugefügt
-Spandau.addPoint(0,0,z,lc,100)
-Spandau.addBSpline([90,100], degree=1, tag=6006)#verbindet Original mit Normale (kurz)
+Spandau.addBSpline([92,91], degree=1, tag=6005) #verbindet Projektion mit Normale (kurz)
+Spandau.addBSpline([92,211], degree=1, tag=6006)
+Spandau.addBSpline([211,90], degree=1, tag=6007)
+
+
+
+
+
 
 
 
 #Vom Span aus Rückwärts
-tSpan1 = start - 0.01
-sinSpan1, cosSpan1 = np.sqrt(fresnel(tSpan1)) #fresnelintegral erzeugen
+distanceNormal = 0.01
+tSpan1 = start - distanceNormal
+sinSpan1, cosSpan1 = modification(function(tSpan1)) #fresnelintegral erzeugen
 xSpan1 = ((sinSpan1)*zoom)+xShift
 ySpan1 = ((cosSpan1)*zoom)+yShift
 Spandau.addPoint(xSpan1,ySpan1,z,lc,80)
 Spandau.addPoint(xSpan1,ySpan1,b,lc,81)
 
 #Normalenvektor
-tSpan = np.linspace(start - 0.01, start, 2)
-sinSpan, cosSpan = np.sqrt(fresnel(tSpan)) #fresnelintegral erzeugen
+
+tSpan = np.linspace(start - distanceNormal, start, 2)
+sinSpan, cosSpan = modification(function(tSpan)) #fresnelintegral erzeugen
 xSpan = ((sinSpan)*zoom)+xShift
 ySpan = ((cosSpan)*zoom)+yShift
 
@@ -169,14 +185,6 @@ for idx in range(len(xSpan)-1):
     Spandau.addPoint(xcSpan,ycSpan,b,lc,83)
 
 
-
-
-
-
-#verbindet Normale mit Normale (lang) wird gegeben durch Linie 44 (bereits im Modell
-#??? ersatz für Linie 44
-Spandau.addBSpline([100,92],degree=1, tag=6009)
-
 norm2 = 1/np.sqrt(1+np.square(2.5))
 Spanx = thick * (-2.5*norm2)
 Spany = thick * (1*norm2)
@@ -192,19 +200,7 @@ Spandau.addPoint((1+vektorx)-Spanx, (2.5+vektory)-Spany,z,lc,98)
 Spandau.addPoint((1+vektorx)-Spanx, (2.5+vektory)-Spany,b,lc,99)
 
 
-
-#wegen neuer geometrie Splines am festen Span
-Spandau.addBSpline([12,100], degree=1, tag=6007)
-Spandau.addBSpline([11,92], degree=1, tag=6008)
-
-
-
-
-
-
-
-
-
+Spandau.addBSpline([92,93],tag=50000)
 
 
 
@@ -220,11 +216,13 @@ index3list.insert(0, 91)
 
 index2list.insert(0, 82)
 index2list.insert(0, 96)
-index2list.insert(0, 12)
+index2list.insert(0, 210)
+
 
 index4list.insert(0, 83)
 index4list.insert(0, 97)
-index4list.insert(0, 11)
+index4list.insert(0, 93)
+
 
 
 Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
@@ -232,29 +230,51 @@ Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
 Spandau.addBSpline(index2list, degree=3, tag=20000) #1.Normalenvektor
 Spandau.addBSpline(index4list, degree=3, tag=40000) #2.Normalenvektor
 
+
+
 #Flächen
 
-#Flächen links und rechts (thick) des Spans
-Spandau.addCurveLoop([6006,10000,6000,20000,6007], tag = 70001)
-Spandau.addCurveLoop([6005,30000,6002,40000,6008], tag = 70002)
+#Flächen links und rechts (dicke) des Spans
+Spandau.addCurveLoop([-6007,10000,-6000,-20000,-9999], tag = 70001)#50002 [2]
+Spandau.addCurveLoop([-6005,30000,-6002,40000,-50000], tag = 70002)#-50001[letzte]
 
-#Flächen an Anfang und end des Spans
-Spandau.addCurveLoop([6004,6006,6009,6005], tag = 80005)
-Spandau.addCurveLoop([6000,6001,6002,6003], tag = 80006)
+#Flächen an Anfang und Ende des Spans
+Spandau.addCurveLoop([-6007,-6006,-6005,-6004], tag = 80005)
+Spandau.addCurveLoop([6000,6001,6002,6003], tag = 80006)#Span ende Fläche 
 
 #Flächen oben und unten vom Span
-Spandau.addCurveLoop([11,20000,6001,40000], tag = 90003)
-Spandau.addCurveLoop([6004,10000,6003,30000], tag = 90004)
+Spandau.addCurveLoop([6006,50000,40000,6001,20000,9999], tag = 90003)
+Spandau.addCurveLoop([6004,30000,6003,-10000], tag = 90004) #50001 [1]-50002[letzte]
 
 Spandau.addThruSections([70001,70002])
+
+Spandau.addPlaneSurface([70001])
+Spandau.addPlaneSurface([70002])
+Spandau.addPlaneSurface([80005])
+Spandau.addPlaneSurface([80006])
+
 
 gmsh.model.occ.cut([(3,1)],[(3,2)],3)
 
 Spandau.synchronize()
 
-gmsh.model.addPhysicalGroup(3, [3], 2)
+
+
+
+
+gmsh.model.addPhysicalGroup(3, [3], 1) #1 Volumen 
+
+surfaces = []
+for i in range(37,74):
+    t = i
+    surfaces.append(t)
+    
+gmsh.model.addPhysicalGroup(2, surfaces,2) #Alle Oberflächen
+
+
+
 gmsh.model.mesh.generate(3)
-gmsh.write("Kringel.msh")
+gmsh.write("Kringel2.msh")
 if '-nopopup' not in sys.argv:
     gmsh.fltk.run()
 gmsh.clear()
