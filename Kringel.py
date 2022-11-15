@@ -268,7 +268,6 @@ surfaces = []
 for i in range(37,74):
     t = i
     surfaces.append(t)
-    
 gmsh.model.addPhysicalGroup(2, surfaces,2) #Alle Oberflächen
 
 
@@ -276,6 +275,6 @@ gmsh.model.addPhysicalGroup(2, surfaces,2) #Alle Oberflächen
 gmsh.model.mesh.generate(3)
 gmsh.write("Kringel2.msh")
 if '-nopopup' not in sys.argv:
-    gmsh.fltk.run()
+gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
