@@ -12,7 +12,12 @@ Als nächstes wird gmsh gestartet und der Spanraum eingelesen."""
 Spandau = gmsh.model.occ
 gmsh.initialize()
 gmsh.merge('./Stroemungsgebiet_Symmetrisch_2.STEP')
+
 """Im folgenden erzeugen wir den Kringel mithilfe der Fresnel-Integrale sowie bereits einige Parameter des Spans"""
+
+
+
+gmsh.initialize()
 
 
 zoom = 70 #Größe des Kringels
@@ -100,7 +105,6 @@ index4 = 4000 #2. Normalenvektor
 index4list=[]
 
 #über jede Koordinatenpackung iterieren und in GMSH eintragen
-
 for [x,y,z] in (coords1[:-1]):
         Spandau.addPoint(x, y, z, lc, index1)
         index1list.append(index1)
@@ -255,12 +259,59 @@ Spandau.addPlaneSurface([80006])
 
 gmsh.model.occ.cut([(3,1)],[(3,2)],3)
 
+
 Spandau.synchronize()
 
+#Links und rechts vom Span
+#z = b
+#unten
+##gmsh.model.mesh.setTransfiniteCurve(9070, 10)
+###oben
+##gmsh.model.mesh.setTransfiniteCurve(9074, 10)
+###z = 0
+###unten
+##gmsh.model.mesh.setTransfiniteCurve(9029, 10)
+###oben
+##gmsh.model.mesh.setTransfiniteCurve(9031, 10)
+##
+###Ende vom span kurze Seite
+###z = b
+##gmsh.model.mesh.setTransfiniteCurve(9072, 10)
+###z = 0
+##gmsh.model.mesh.setTransfiniteCurve(9030, 10)
+###Ende vom Span lange Seite
+###oben
+##gmsh.model.mesh.setTransfiniteCurve(6001, 10)
+###unten
+##gmsh.model.mesh.setTransfiniteCurve(6003, 10)
+##
+###Anfang vom span lange Seite
+##gmsh.model.mesh.setTransfiniteCurve(6004, 10)
+###Anfang vom span kurze Seite
+##gmsh.model.mesh.setTransfiniteCurve(9065, 10)
+
+for n in range(37,74):
+    for i in gmsh.model.get_adjacencies(2,n)[1]:
+        print("i = %d" % (i))
+        gmsh.model.mesh.setTransfiniteCurve(i, 20)
+
+gmsh.model.mesh.setTransfiniteSurface(55)
+
+#gmsh.model.mesh.setSmoothing(2, 55, 8)
+#
+#gmsh.model.mesh.setAlgorithm(2, 53, 7)
+#gmsh.model.mesh.setAlgorithm(3, 3, 9)
+
+
+  
 
 
 
-gmsh.model.addPhysicalGroup(3, [3], 1) #1 Volumen 
+#gmsh.model.mesh.setTransfiniteSurface(55, arrangement='Left')
+#gmsh.model.mesh.recombine()
+#Pyhsicals Groups deklarieren
+
+#gmsh.model.addPhysicalGroup(3, [3], 1) #1 Volumen 
 
 surfaces = []
 for i in range(37,74):
@@ -269,12 +320,12 @@ for i in range(37,74):
     
 gmsh.model.addPhysicalGroup(2, surfaces,2) #Alle Oberflächen
 
-#gmsh.option.setNumber("Geometry.OCCBoundsUseStl", 1)
 
-gmsh.model.mesh.generate(3)
-gmsh.write("Kringel2.msh")
-if '-nopopup' not in sys.argv:
-    gmsh.fltk.run()
-gmsh.clear()
-gmsh.finalize()
+
+#gmsh.model.mesh.generate(3)
+#gmsh.write("Kringel2.msh")
+#if '-nopopup' not in sys.argv:
+gmsh.fltk.run()
+#gmsh.clear()
+#gmsh.finalize()
 
