@@ -11,7 +11,7 @@ Als nächstes wird gmsh gestartet und der Spanraum eingelesen."""
 
 Spandau = gmsh.model.occ
 gmsh.initialize()
-gmsh.merge('./Stroemungsgebiet_Symmetrisch_2.STEP')
+gmsh.merge('./Stroemungsgebiet_Symmetrisch_3.STEP')
 """Im folgenden erzeugen wir den Kringel mithilfe der Fresnel-Integrale sowie bereits einige Parameter des Spans"""
 
 
@@ -259,9 +259,6 @@ gmsh.model.occ.cut([(3,1)],[(3,2)],3)
 Spandau.synchronize()
 
 
-
-
-
 gmsh.model.addPhysicalGroup(3, [3], 1) #1 Volumen 
 
 surfaces = []
@@ -274,7 +271,6 @@ gmsh.model.addPhysicalGroup(2, surfaces,2) #Alle Oberflächen
 
 gmsh.model.mesh.generate(3)
 gmsh.write("Kringel2.msh")
-if '-nopopup' not in sys.argv:
 gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
