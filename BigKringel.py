@@ -152,7 +152,7 @@ Spandau.addPoint(xSpan1,ySpan1,z,lc,80)
 Spandau.addPoint(xSpan1,ySpan1,b,lc,81)
 """
 
-"""Hier werden die Hilfspunkte für einen stetigen Übergang errechnet. Dabei wird sowohl vom Kringel aus Rückwärts so wie vom festen Span aus entgegengekommen für ein besonders stetigen Übergang. Ist hier hinfällig, da die Transfinite Geometire keinen stetigen Übergang erlaubt. Bei Bedarf alles Auskommentierte wieder einkommentieren."""
+"""Hier werden die Hilfspunkte für einen stetigen Übergang errechnet. Dabei wird sowohl vom Kringel aus Rückwärts so wie vom festen Span aus entgegengekommen für ein besonders stetigen Übergang. Ist hier hinfällig, da die Transfinite Geometire keinen stetigen Übergang erlaubt. Bei Bedarf alles Auskommentierte zwischen den Zeilen 160-208  wieder einkommentieren."""
 tSpan = np.linspace(start - distanceNormal, start, 2)
 sinSpan, cosSpan = modification(function(tSpan)) #fresnelintegral erzeugen
 xSpan = ((sinSpan)*zoom)+xShift
@@ -188,12 +188,11 @@ vektory = norm2*(abstand/5)*2.5
 
 
 """Alle Hilfspunkte werden zum Kringel hinzugefügt"""
-#index1list.insert(0, 80)
 #index1list.insert(0, 98)
 index1list.insert(0, 94)
 
 
-#index3list.insert(0, 81)
+
 #index3list.insert(0, 99)
 index3list.insert(0, 95)
 
