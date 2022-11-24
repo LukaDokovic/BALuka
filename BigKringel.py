@@ -186,7 +186,6 @@ vektory = norm2*(abstand/5)*2.5
 #Spandau.addPoint((1+vektorx)-Spanx, (2.5+vektory)-Spany,b,lc,99)
 
 
-
 """Alle Hilfspunkte werden zum Kringel hinzugefügt"""
 #index1list.insert(0, 98)
 index1list.insert(0, 94)
