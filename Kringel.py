@@ -270,7 +270,7 @@ gmsh.model.addPhysicalGroup(2, surfaces,2) #Alle Oberflächen
 
 
 gmsh.model.mesh.generate(3)
-gmsh.write("Kringel2.msh")
+gmsh.write("Kringel.msh")
 gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
