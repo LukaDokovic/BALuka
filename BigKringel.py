@@ -318,7 +318,7 @@ gmsh.model.mesh.setTransfiniteSurface(20)
 
 
 gmsh.model.mesh.generate(3)
-gmsh.write("Transfinite.msh")
+gmsh.write("BigKringel.msh")
 gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
