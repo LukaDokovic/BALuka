@@ -7,33 +7,41 @@ import os
 import matplotlib.pyplot as plt
 from sympy import *
 
-
 #Phase 0
-
-#toolRoomHeight = 
-#toolHeight =
+"""
+asktime = input("Wie viel Uhr? (0-1) ")
+phase = float(asktime)
+askquantity = input("Wie viele Elemente? ")
+quantity = int(askquantity)
+"""
 start = int(0)#Startpunkt des Kringels
 end = int(2) #Endpunkt des Kringels
-quantityCalc = int(end * 100000) #Anzahl der Punkte des Kringels
+definition = 1000000
+quantityCalc = int(end * definition) #Anzahl der Punkte des Kringels
 u = np.linspace(start, end, quantityCalc) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
 function = fresnel
-#modification = np.sqrt
 sin, cos = (function(u)) #Erzeugt das Fresnelintegral #modification(function(u))
-x = sin
-y = cos
+x = sin 
+y = cos 
+xShift = 0
+yShift = 0
 plt.plot(x, y, 'red')
 plt.savefig('foo.png')
 
 #Die Kooridnaten werden in Arrays abgepackt
 coordsXCalc = (x)
 resultXCalc = []
-for x in coordsXCalc:
-    resultXCalc.append(x)
-        
+
 coordsYCalc = (y)
 resultYCalc = []
-for y in coordsYCalc:
-    resultYCalc.append(y) 
+
+def getInArray(xList, xArray , yList, yArray):
+    for x in xList:
+        xArray.append(x)
+        
+    for y in yList:
+        yArray.append(y)         
+getInArray(coordsXCalc, resultXCalc, coordsYCalc, resultYCalc)
 
 #Löscht jeden Eintrag aus den Koordinaten-Arrays
 def resetCoords (xList,yList):
@@ -42,55 +50,49 @@ def resetCoords (xList,yList):
 
 #Y-Koordinatenwert nach 180°
 def getYValuePi(xList, yList):
-    maxX = np.amax(xList)
     xPosition = np.where(xList == np.amax(xList))
-    xPositionArray = xPosition[0]
+    xPositionArray = xPosition[0]#Y-Koordinatenwert nach 90°zoom = 10 #Größe des Kringels
     xPositionInt = xPositionArray[0]
     yValuePi = yList[xPositionInt]
     return yValuePi
-print(getYValuePi(resultXCalc, resultYCalc))
+#print(getYValuePi(resultXCalc, resultYCalc))
 
 #X-Koordinatenwert nach 180°
 def getXValuePi(xList, yList):
-    maxX = np.amax(xList)
     xPosition = np.where(xList == np.amax(xList))
     xPositionArray = xPosition[0]
     xPositionInt = xPositionArray[0]
     xValuePi = xList[xPositionInt]
     return xValuePi
-print(getXValuePi(resultXCalc, resultYCalc))
+#print(getXValuePi(resultXCalc, resultYCalc))
 
 #Arrayindex für die Koordinaten bei 180°
-def getIndexPi(xList, yList):
-    maxX = np.amax(xList)
+def getIndexPi(xList, yList):    
     xPosition = np.where(xList == np.amax(xList))
-    xPositionArray = xPosition[0]
+    xPositionArray = xPosition[0]#Y-Koordinatenwert nach 90°
     xPositionInt = xPositionArray[0]
     return xPositionInt
-print(getIndexPi(resultXCalc, resultYCalc))
+#print(getIndexPi(resultXCalc, resultYCalc))
 
 #Y-Koordinatenwert nach 90°
-def getYValuePiHalf(xList, yList):
-    maxY = np.amax(yList)
+def getYValuePiHalf(xList, yList):    
     yPosition = np.where(yList == np.amax(yList))
     yPositionArray = yPosition[0]
     yPositionInt = yPositionArray[0]
     yValuePiHalf = yList[yPositionInt]
     return yValuePiHalf
-print(getYValuePiHalf(resultXCalc,resultYCalc))
+#print(getYValuePiHalf(resultXCalc,resultYCalc))
 
 #Arrayindex für die Koordinaten bei 90°
-def getYIndexPiHalf(xList, yList):
-    maxY = np.amax(yList)
+def getYIndexPiHalf(xList, yList):    
     yPosition = np.where(yList == np.amax(yList))
     yPositionArray = yPosition[0]
     yIndexPiHalf = yPositionArray[0]
     return yIndexPiHalf
-print(getYIndexPiHalf(resultXCalc,resultYCalc))
+#print(getYIndexPiHalf(resultXCalc,resultYCalc))
 
 #Arrayindex für die Koordinaten bei 270°
 def getYIndex3PiHalf(xList, yList):
-    maxX = np.amax(xList)
     xPosition = np.where(xList == np.amax(xList))
     xPositionArray = xPosition[0]
     xPositionInt = xPositionArray[0]
@@ -99,18 +101,105 @@ def getYIndex3PiHalf(xList, yList):
     minPositionArray = minPosition[0]
     yIndex3PiHalf = minPositionArray[0]+xPositionInt
     return yIndex3PiHalf
-print(getYIndex3PiHalf(resultXCalc,resultYCalc))
+#print(getYIndex3PiHalf(resultXCalc,resultYCalc))
 
 #Y-Koordinatenwert nach 270°
 def getYValue3PiHalf(xList, yList):
-    maxX = np.amax(xList)
+    
     xPosition = np.where(xList == np.amax(xList))
     xPositionArray = xPosition[0]
     xPositionInt = xPositionArray[0]
     cutList = yList[xPositionInt:]
     yValue3PiHalf = np.amin(cutList)
     return yValue3PiHalf
-print(getYValue3PiHalf(resultXCalc,resultYCalc))
+#print(getYValue3PiHalf(resultXCalc,resultYCalc))
+
+
+def getYIndexZero(xList, yList):
+    yIndexZero = next(x[0] for x in enumerate(yList) if x[1] > -0.000000000000001)
+    return yIndexZero
+#print(getYIndexZero(resultXCalc,resultYCalc))
+
+def getYValueZero(xList, yList):
+    yIndexZero = next(x[0] for x in enumerate(yList) if x[1] > -0.000000000000001)
+    yValueZero = yList[yIndexZero]
+    return(yValueZero)
+#print(getYValueZero(resultXCalc, resultYCalc))
+
+def getXValueZero(xList, yList):
+    yIndexZero = next(y[0] for y in enumerate(yList) if y[1] >= 0)
+    xValueZero = xList[yIndexZero]
+    return(xValueZero)
+#print(getXValueZero(resultXCalc,resultYCalc))
+
+#Erstellung der Normalenvektoren
+def normal(xValue, yValue, xList, yList):
+    for idx in range(len(x)-1):
+        x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
+        dx = x1-x0 #Ableitungen
+        dy = y1-y0
+        norm = math.hypot(dx, dy) * 1/thick #Normierung
+        dx /= norm
+        dy /= norm
+        xc = x0-dy #Vekotor+Original
+        yc = y0+dx
+        xList.append(xc)#Einfügen in die Arrays
+        yList.append(yc)
+
+
+
+#phase 1
+finalList = []
+phase = 0.1
+
+def phase1(phase1List, status):
+    del phase1List[:]
+    spiralProgress = status
+
+    yShift = getYValuePi(resultXCalc,resultYCalc)
+    xShift = 0
+    resetCoords(resultXCalc, resultYCalc)
+    x = sin + xShift
+    y = cos - yShift
+    coordsXPhase1 = (x)
+    coordsYPhase1 = (y)
+    getInArray(coordsXPhase1, resultXCalc, coordsYPhase1, resultYCalc)
+    yShift1 = getYValueZero(resultXCalc,resultYCalc)
+    xShift1 = getXValueZero(resultXCalc, resultYCalc)
+    resetCoords(resultXCalc, resultYCalc)
+    
+    x = sin - xShift1
+    y = cos - yShift - yShift1
+    coordsXPhase11 = (x)
+    coordsYPhase11 = (y)
+    getInArray(coordsXPhase11, resultXCalc, coordsYPhase11, resultYCalc)
+    IndexPi = getIndexPi(resultXCalc, resultYCalc)
+    IndexZero = getYIndexZero(resultXCalc, resultYCalc)
+    startPhase1 = (1/definition) * (IndexZero+1)
+    if (spiralProgress >= 0.1):
+        endPhase1 = (1/definition) * (IndexPi+1)
+    elif (spiralProgress <0.1):
+        percent = spiralProgress * 10
+        endPhase1 = ((1/definition) * (IndexPi+1)) * percent
+    finalXShift1 = -xShift1
+    finalYShift1 = -(yShift + yShift1)
+    phase1List.insert(0,startPhase1)
+    phase1List.insert(1,endPhase1)
+    phase1List.insert(2,finalXShift1)
+    phase1List.insert(3,finalYShift1)
+
+
+if (phase <= 1):
+    phase1(finalList, phase)
+
+
+
+start = finalList[0]
+end = finalList[1]
+xShift = finalList[2]
+yShift = finalList[3]
+
+  
 
 
 
@@ -125,37 +214,136 @@ print(getYValue3PiHalf(resultXCalc,resultYCalc))
 
 
 
+Spandau = gmsh.model.occ
+gmsh.initialize()
 
-#toolRoomHeight = 
-#toolHeight =
-time = 0
-start = 0.38 #Startpunkt des Kringels
-end = 3 #Endpunkt des Kringels
-zoom = 70 #Größe des Kringels
+
+
+
+zoom = 10 #Größe des Kringels
 quantity = 50 #Anzahl der Punkte des Kringels
-#quatityCalc =
-xShift = -7.47 #Verschiebung in X-Richtung
-yShift = -38 #Verschiebung in Y-Richtung
 zShift = 0 #Verschiebung in Z-Richtung
 wide = 12 #Breite des Spans
-thick = 1 #Dicke des Spans
+thick = 0.25 #Dicke des Spans
 lc = -5.0 #Netzdichte an den Punkten des Kringels
 
 
-u = np.linspace(start, end, quantity+1) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
-function = fresnel
-modification = np.sqrt
-sin, cos = modification(function(u)) #Erzeugt das Fresnelintegral
-x = ((sin)*zoom) + xShift
-y = ((cos)*zoom) + yShift
-z = u * 0 + zShift #Lage der Symmatrieachse
+
+
+t = np.linspace(start, end, quantity) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
+sin, cos = function(t) #Erzeugt das Fresnelintegral
+x = ((sin)*zoom) + (xShift*zoom) #Fügt alle Parameter für X und Y zusammen und erzeugt die X und Y Koordinaten
+y = ((cos)*zoom) + (yShift*zoom)
+z = t * 0 + zShift #Lage der Symmatrieachse
 b = z + wide #Breite des Kringels
+
+        
+resultdx = [] #Arrays für die Koordinaten der Normalenvektoren, müssen global sein (also außerhalb der funktion deklariert) um in jedem Punkt des Programms darauf zugreifen zu können
+resultdy = []
+
+#Normalenvektoren für den originalen Kringel werden erstellt
+normal(x, y, resultdx, resultdy)
+
+#Die Endpunkte der Normalenvektoren sind aufgrund der art der Errechnung der Normalenvektoren wird ein Punkt "zu wenig" errechnet daher für den letzten Punkt hier noch eine einzelne Berechnung eines Noramlenvekors
+tChipEnd = np.linspace(end, end+0.1 , quantity)
+sinChipEnd, cosChipEnd = function(tChipEnd) #Erzeugt das Fresnelintegral
+xChipEnd = ((sinChipEnd)*zoom) + (xShift*zoom) #Fügt alle Parameter für X und Y zusammen und erzeugt die X und Y Koordinaten
+yChipEnd = ((cosChipEnd)*zoom) + (yShift*zoom)
+
+#Letztes Normalenelement wird erstellt
+normal(xChipEnd, yChipEnd, resultdx, resultdy)
+
+
+
+coordsx = (x)
+resultx = []
+for x in coordsx:
+    x = round(x,4)
+    resultx.append(x)
+        
+coordsy = (y)
+resulty = []
+for y in coordsy:
+    y = round(y,4)
+    resulty.append(y)
+
+coordsz = (z)
+resultz = []
+for z in coordsz:
+    resultz.append(z)
     
+coordsb = (b)
+resultb =[]
+for b in coordsb:
+    resultb.append(b) 
     
-    
-    
-    
-#phase1
-#phase2
-#phase3
-#phase4 
+coords1 = list(zip(resultx, resulty, resultz)) #Kringel
+coords1n = list(zip(resultdx, resultdy, resultz)) #Paralleler Kringel
+coords2 = list(zip(resultx, resulty, resultb))
+coords2n = list(zip(resultdx, resultdy, resultb))
+
+index1 = 1000 #Original Kringel
+index1list=[]
+index2 = 2000 #1. Normalenvektor
+index2list=[]
+index3 = 3000 #Projektion des Kringels
+index3list=[]
+index4 = 4000 #2. Normalenvektor
+index4list=[]
+
+for [x,y,z] in coords1:
+        Spandau.addPoint(x, y, z, lc, index1)
+        index1list.append(index1)
+        index1+=1
+
+for [x,y,b] in coords2:
+        Spandau.addPoint(x, y, b, lc, index3)
+        index3list.append(index3)
+        index3+=1
+
+for [xc,yc,z] in coords1n:
+        Spandau.addPoint(xc, yc, z, lc, index2)
+        index2list.append(index2)
+        index2+=1
+
+for [xc,yc,b] in coords2n:
+        Spandau.addPoint(xc, yc, b, lc, index4)
+        index4list.append(index4)
+        index4+=1
+        
+ 
+#Die vier Anfangspunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
+Spandau.addBSpline([(index1)-quantity,(index2)-quantity], degree=1, tag=5000) #verbindet Original mit Normale (kurz)
+Spandau.addBSpline([(index3)-quantity,(index4)-quantity], degree=1, tag=5001) #verbindet Projektion mit Normale (kurz)
+ 
+ 
+ 
+ #Die vier endpunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
+Spandau.addBSpline([index1-1,index2-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
+Spandau.addBSpline([index3-1,index4-1], degree=1, tag=6001) #verbindet Projektion mit Normale (kurz)
+
+
+Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
+Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
+Spandau.addBSpline(index2list, degree=3, tag=20000) #1.Normalenvektor
+Spandau.addBSpline(index4list, degree=3, tag=40000) #2.Normalenvektor
+
+
+
+
+
+
+
+
+
+
+
+
+Spandau.synchronize()
+
+
+gmsh.model.mesh.generate(1)
+gmsh.write("Spirale.msh")
+gmsh.fltk.run()
+gmsh.clear()
+gmsh.finalize()
