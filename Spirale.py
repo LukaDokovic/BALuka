@@ -8,9 +8,11 @@ import matplotlib.pyplot as plt
 from sympy import *
 
 #Phase 0
-"""
-asktime = input("Wie viel Uhr? (0-1) ")
+
+asktime = input("Wie viel Uhr? (0.1-1) ")
 phase = float(asktime)
+
+"""
 askquantity = input("Wie viele Elemente? ")
 quantity = int(askquantity)
 """
@@ -140,7 +142,7 @@ def normal(xValue, yValue, xList, yList):
         x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
         dx = x1-x0 #Ableitungen
         dy = y1-y0
-        norm = math.hypot(dx, dy) * 1/thick #Normierung
+        norm = math.hypot(dx, dy) * 1/(-thick) #Normierung
         dx /= norm
         dy /= norm
         xc = x0-dy #Vekotor+Original
@@ -154,7 +156,7 @@ def normalTransfi(xValue, yValue, xList, yList):
         x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
         dx = x1-x0 #Ableitungen
         dy = y1-y0
-        norm = math.hypot(dx, dy) * 1/(thick+thickTransfi) #Normierung
+        norm = math.hypot(dx, dy) * 1/(-thick-thickTransfi) #Normierung
         dx /= norm
         dy /= norm
         xc = x0-dy #Vekotor+Original
@@ -167,7 +169,7 @@ def normalTransfi2(xValue, yValue, xList, yList):
         x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
         dx = x1-x0 #Ableitungen
         dy = y1-y0
-        norm = math.hypot(dx, dy) * 1/(-thickTransfi) #Normierung
+        norm = math.hypot(dx, dy) * 1/(thickTransfi) #Normierung
         dx /= norm
         dy /= norm
         xc = x0-dy #Vekotor+Original
@@ -180,7 +182,7 @@ def normalTransfi2(xValue, yValue, xList, yList):
 
 #phase 1
 finalList = []
-phase = 0.08
+#phase = 1
 
 def phase1(phase1List, status):
     del phase1List[:]
@@ -238,7 +240,7 @@ if (phase <= 1):
 
 
 start = finalList[0]
-end = finalList[1]
+end = finalList[1]+0.1
 xShift = finalList[2]
 yShift = finalList[3]
 zoom = finalList[4]
@@ -258,7 +260,7 @@ thick = 0.25 #Dicke des Spans
 thickTransfi = 0.25
 lc = -5.0 #Netzdichte an den Punkten des Kringels
 transfiExtraLength = 0.02
-startTransfi = start - transfiExtraLength
+startTransfi = start - 0.1
 endTransfi = end + transfiExtraLength
 
 t = np.linspace(start, end, quantity) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
@@ -397,65 +399,89 @@ for [xc,yc,z] in coords4nb:
         index8list.append(index8)
         index8+=1
  
-#Die vier Anfangspunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
-Spandau.addBSpline([(index2)-quantity, (index1)-quantity], degree=1, tag=5000) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([(index4)-quantity, (index3)-quantity], degree=1, tag=5001) #verbindet Projektion mit Normale (kurz)
- 
-Spandau.addBSpline([(index6)-quantity, (index8)-quantity], degree=1, tag=5002) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([(index5)-quantity, (index7)-quantity], degree=1, tag=5003) #verbindet Projektion mit Normale (kurz)
- 
- #Die vier endpunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
-Spandau.addBSpline([index1-1,index2-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([index3-1,index4-1], degree=1, tag=6001) #verbindet Projektion mit Normale (kurz)
+if phase >= 0.1 : 
+    #Die vier Anfangspunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
+    Spandau.addBSpline([(index2)-quantity, (index1)-quantity], degree=1, tag=5000) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([(index4)-quantity, (index3)-quantity], degree=1, tag=5001) #verbindet Projektion mit Normale (kurz)
+    
+    Spandau.addBSpline([(index6)-quantity, (index8)-quantity], degree=1, tag=5002) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([(index5)-quantity, (index7)-quantity], degree=1, tag=5003) #verbindet Projektion mit Normale (kurz)
+    
+    #Die vier endpunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
+    Spandau.addBSpline([index1-1,index2-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([index3-1,index4-1], degree=1, tag=6001) #verbindet Projektion mit Normale (kurz)
 
-Spandau.addBSpline([index8-1,index6-1], degree=1, tag=6002) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([index7-1,index5-1], degree=1, tag=6003) #verbindet Projektion mit Normale (kurz)
+    Spandau.addBSpline([index8-1,index6-1], degree=1, tag=6002) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([index7-1,index5-1], degree=1, tag=6003) #verbindet Projektion mit Normale (kurz)
 
+    #Spandau.addBSpline([index8-1,index3-1], degree=1, tag=7000) #verbindet Original mit Normale (kurz) #Flächen brauchen 4 Ecken... um die Ränder kümmern
+    #Spandau.addBSpline([index4-1,index6-1], degree=1, tag=7001) #verbindet Original mit Normale (kurz)
 
-Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
-Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
-Spandau.addBSpline(index2list[::-1], degree=3, tag=20000) #1.Normalenvektor
-Spandau.addBSpline(index4list[::-1], degree=3, tag=40000) #2.Normalenvektor
-
-
-Spandau.addBSpline(index5list[::-1], degree=3, tag=50000) #OriginalKringel
-Spandau.addBSpline(index7list, degree=3, tag=70000) #Projektion des Kringels
-Spandau.addBSpline(index6list[::-1], degree=3, tag=60000) #1.Normalenvektor
-Spandau.addBSpline(index8list, degree=3, tag=80000) #2.Normalenvektor
+    #Spandau.addBSpline([index1-1,index7-1], degree=1, tag=7002) #verbindet Original mit Normale (kurz)
+    #Spandau.addBSpline([index2-1,index5-1], degree=1, tag=7003) #verbindet Original mit Normale (kurz)
 
 
 
+    Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
+    Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
+    Spandau.addBSpline(index2list[::-1], degree=3, tag=20000) #1.Normalenvektor
+    Spandau.addBSpline(index4list[::-1], degree=3, tag=40000) #2.Normalenvektor
+
+
+    Spandau.addBSpline(index5list[::-1], degree=3, tag=50000) #OriginalKringel
+    Spandau.addBSpline(index7list, degree=3, tag=70000) #Projektion des Kringels
+    Spandau.addBSpline(index6list[::-1], degree=3, tag=60000) #1.Normalenvektor
+    Spandau.addBSpline(index8list, degree=3, tag=80000) #2.Normalenvektor
 
 
 
 
 
 
-#Volumen vom echten Kringel
-Spandau.addCurveLoop([5001, 30000, 6001, 40000], tag = 80000)
-Spandau.addCurveLoop([5000, 10000, 6000, 20000], tag = 80001)
-
-Spandau.addCurveLoop([5002, 80000, 6002, 60000], tag = 80002)
-Spandau.addCurveLoop([5003, 70000, 6003, 50000], tag = 80003)
-
-Spandau.addThruSections([80000, 80001],1)
-Spandau.addThruSections([80002, 80003],2)
 
 
 
-gmsh.model.occ.addBox(-3, 0, zShift, 115, -10, wide, tag=100)
+    #Volumen vom echten Kringel
+    Spandau.addCurveLoop([5001, 30000, 6001, 40000], tag = 80000)
+    Spandau.addCurveLoop([5000, 10000, 6000, 20000], tag = 80001)
+
+    Spandau.addCurveLoop([5002, 80000, 6002, 60000], tag = 80002)
+    Spandau.addCurveLoop([5003, 70000, 6003, 50000], tag = 80003)
+
+    Spandau.addThruSections([80000, 80001],2)
+    Spandau.addThruSections([80002, 80003],1)
 
 
-gmsh.model.occ.cut([(3,2)],[(3,1)],tag=-1)
-gmsh.model.occ.cut([(3,2)],[(3,100)],tag=-1)
+
+    gmsh.model.occ.addBox(-3, 0, zShift, 115, -10, wide, tag=100)
 
 
+    gmsh.model.occ.cut([(3,1)],[(3,2)],tag=-1)
+    gmsh.model.occ.cut([(3,1)],[(3,100)],tag=-1)
 
-tooMuch= (gmsh.model.occ.getEntitiesInBoundingBox(-100, -100, -100, 100, 0, 100, dim=0))
-gmsh.model.occ.remove(tooMuch, recursive=False)
+
+tooMuchSplines= (gmsh.model.occ.getEntitiesInBoundingBox(-100, -100, -100, 100, 0, 100, dim=1))
+gmsh.model.occ.remove(tooMuchSplines, recursive=False)
+
+tooMuchPoints= (gmsh.model.occ.getEntitiesInBoundingBox(-100, -100, -100, 100, 0, 100, dim=0))
+gmsh.model.occ.remove(tooMuchPoints, recursive=False)
     
 
+
 Spandau.synchronize()
+
+for i in range(0,25):
+    gmsh.model.mesh.setTransfiniteCurve(i, 15)
+
+for i in range(1,13):
+    gmsh.model.mesh.setTransfiniteSurface(i)
+    
+gmsh.model.mesh.setTransfiniteVolume(1)
+gmsh.model.mesh.setTransfiniteVolume(2)
+
+
+gmsh.model.mesh.field.setAsBackgroundMesh(1)
+
 
 
 
