@@ -9,7 +9,7 @@ from sympy import *
 
 #Phase 0
 
-asktime = input("Wie viel Uhr? (0.1-2) ")
+asktime = input("Wie viel Uhr? (0-3) ")
 phase = float(asktime)
 
 
@@ -145,7 +145,7 @@ def normal(xValue, yValue, xList, yList):
         x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
         dx = x1-x0 #Ableitungen
         dy = y1-y0
-        norm = math.hypot(dx, dy) * 1/(thick+thickTransfi) #Normierung
+        norm = math.hypot(dx, dy) * 1/(thick+thickTransfi+thick) #Normierung
         dx /= norm
         dy /= norm
         xc = x0-dy #Vekotor+Original
@@ -176,7 +176,7 @@ def normalTransfi2(xValue, yValue, xList, yList):
         x0, y0, x1, y1 = xValue[idx], yValue[idx], xValue[idx+1], yValue[idx+1]
         dx = x1-x0 #Ableitungen
         dy = y1-y0
-        norm = math.hypot(dx, dy) * 1/(thick+thickTransfi+thick) #Normierung
+        norm = math.hypot(dx, dy) * 1/(thick+thickTransfi) #Normierung
         dx /= norm
         dy /= norm
         xc = x0-dy #Vekotor+Original
@@ -229,24 +229,13 @@ def phase1(phaseList, status):
   
     
     phaseList.insert(0,startPhase)
-    phaseList.insert(1,endPhase)
+    phaseList.insert(1,endPhaseSpan)
     phaseList.insert(2,finalXShift)
     phaseList.insert(3,finalYShift)
     phaseList.insert(4,zoomPhase)
-    phaseList.insert(5,endPhaseSpan)
-    print(endPhaseSpan)
-    print(endPhase)
-
+    
 if (phase < 0.1):
     phase1(finalList, phase)
-
-
-
-
-
-
-
-
 
 
 def phase11(phase1List, status):
@@ -297,7 +286,6 @@ def phase2(phase2List, status):
     
     zoomPhase1 = 20
     
-    print(zoomPhase1)
     
     del phase2List[:]
     spiralProgress = status-1
@@ -404,27 +392,11 @@ if (phase > 2 and phase <= 3):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+end = finalList[1]
 
 
 
 start = finalList[0]
-end = finalList[1]
 xShift = finalList[2]
 yShift = finalList[3]
 zoom = finalList[4]
@@ -433,17 +405,13 @@ zoom = finalList[4]
 Spandau = gmsh.model.occ
 gmsh.initialize()
 
-
-
 #quantity = 50 #Anzahl der Punkte des Kringels
 wide = 12 #Breite des Spans
 lc = -1.0 #Netzdichte an den Punkten des Kringels
 
-startTransfi = start
-endTransfi = end
 
 t = np.linspace(start, end, quantity) #Erzeugt die gewünschte Anzahl an Punkten zwischen Start und Endpunkt (+1 da die ableitung für die Normalenvektoren und dadurch das +1. Element genutzt wird)
-tTransfi = np.linspace(startTransfi, endTransfi, quantity)
+tTransfi = np.linspace(start, end, quantity)
 
 sin, cos = function(t) #Erzeugt das Fresnelintegral
 sinTransfi, cosTransfi = function(tTransfi)
@@ -474,7 +442,7 @@ normalTransfi2(xTransfi, yTransfi, resultdxTransfi2, resultdyTransfi2)
 
 #Die Endpunkte der Normalenvektoren sind aufgrund der art der Errechnung der Normalenvektoren wird ein Punkt "zu wenig" errechnet daher für den letzten Punkt hier noch eine einzelne Berechnung eines Noramlenvekors
 tChipEnd = np.linspace(end, end+0.01 , quantity)
-tChipEndTransfi = np.linspace(endTransfi, endTransfi+0.01, quantity)
+tChipEndTransfi = np.linspace(end, end+0.01, quantity)
 
 sinChipEnd, cosChipEnd = function(tChipEnd) #Erzeugt das Fresnelintegral
 sinChipEndTransfi, cosChipEndTransfi = function(tChipEndTransfi)
@@ -553,7 +521,7 @@ for [x,y,b] in coords2:
         index3+=1
 
 
-coords1n.insert(0,(-thick-thickTransfi-verschiebungAnfang, 0, 0))
+coords1n.insert(0,(-thick-thickTransfi-thickTransfi-verschiebungAnfang, 0, 0))
 
 for [xc,yc,z] in coords1n:
         Spandau.addPoint(xc, yc, z, lc, index2)
@@ -561,8 +529,7 @@ for [xc,yc,z] in coords1n:
         index2+=1
 
 
-
-coords2n.insert(0,(-thick-thickTransfi-verschiebungAnfang, 0, wide))
+coords2n.insert(0,(-thick-thickTransfi-thickTransfi-verschiebungAnfang, 0, wide))
 
 for [xc,yc,b] in coords2n:
         Spandau.addPoint(xc, yc, b, lc, index4)
@@ -584,14 +551,14 @@ for [xc,yc,z] in coords3nb:
         index6list.append(index6)
         index6+=1
 
-coords4n.insert(0,(-thickTransfi-thickTransfi-thick-verschiebungAnfang, 0, 0))
+coords4n.insert(0,(-thickTransfi-thick-verschiebungAnfang, 0, 0))
 
 for [xc,yc,z] in coords4n:
         Spandau.addPoint(xc, yc, z, lc, index7)
         index7list.append(index7)
         index7+=1
         
-coords4nb.insert(0,(-thickTransfi-thickTransfi-thick-verschiebungAnfang, 0, wide))
+coords4nb.insert(0,(-thickTransfi-thick-verschiebungAnfang, 0, wide))
 
 for [xc,yc,z] in coords4nb:
         Spandau.addPoint(xc, yc, z, lc, index8)
@@ -599,53 +566,53 @@ for [xc,yc,z] in coords4nb:
         index8+=1
 
 #Die vier Anfangspunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
-Spandau.addBSpline([(index5)-(quantity+1), (index1)-quantity], degree=1, tag=5000) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([(index6)-(quantity+1), (index3)-quantity], degree=1, tag=5001) #verbindet Projektion mit Normale (kurz)
+if (phase <= 3 and phase >0):
+    Spandau.addBSpline([(index5)-(quantity+1), (index1)-quantity], degree=1, tag=5000) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([(index6)-(quantity+1), (index3)-quantity], degree=1, tag=5001) #verbindet Projektion mit Normale (kurz)
 
-Spandau.addBSpline([(index4)-(quantity+1), (index6)-(quantity+1)], degree=1, tag=5002) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([(index2)-(quantity+1), (index5)-(quantity+1)], degree=1, tag=5003) #verbindet Projektion mit Normale (kurz)
+    Spandau.addBSpline([(index8)-(quantity+1), (index6)-(quantity+1)], degree=1, tag=5002) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([(index7)-(quantity+1), (index5)-(quantity+1)], degree=1, tag=5003) #verbindet Projektion mit Normale (kurz)
 
-Spandau.addBSpline([(index7)-(quantity+1), (index2)-(quantity+1)], degree=1, tag=5004) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([(index8)-(quantity+1), (index4)-(quantity+1)], degree=1, tag=5005) #verbindet Projektion mit Normale (kurz)
+    Spandau.addBSpline([(index7)-(quantity+1), (index2)-(quantity+1)], degree=1, tag=5004) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([(index8)-(quantity+1), (index4)-(quantity+1)], degree=1, tag=5005) #verbindet Projektion mit Normale (kurz)
 
-#Die vier endpunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
-Spandau.addBSpline([index1-1,index5-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([index3-1,index6-1], degree=1, tag=6001) #verbindet Projektion mit Normale (kurz)
+    #Die vier endpunkte werden hier (jeweils 2) durch BSplines verbunden. Splines erhalten wie Punkte in GMSH natürlich auch einen Tag. 
+    Spandau.addBSpline([index1-1,index5-1], degree=1, tag=6000) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([index3-1,index6-1], degree=1, tag=6001) #verbindet Projektion mit Normale (kurz)
 
-Spandau.addBSpline([index6-1,index4-1], degree=1, tag=6002) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([index5-1,index2-1], degree=1, tag=6003) #verbindet Projektion mit Normale (kurz)
+    Spandau.addBSpline([index6-1,index8-1], degree=1, tag=6002) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([index5-1,index7-1], degree=1, tag=6003) #verbindet Projektion mit Normale (kurz)
 
-Spandau.addBSpline([index4-1,index8-1], degree=1, tag=6004) #verbindet Original mit Normale (kurz)
-Spandau.addBSpline([index2-1,index7-1], degree=1, tag=6005) #verbindet Projektion mit Normale (kurz)
-
-
-Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
-Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
-Spandau.addBSpline(index2list[::-1], degree=3, tag=20000) #1.Normalenvektor
-Spandau.addBSpline(index4list[::-1], degree=3, tag=40000) #2.Normalenvektor
+    Spandau.addBSpline([index4-1,index8-1], degree=1, tag=6004) #verbindet Original mit Normale (kurz)
+    Spandau.addBSpline([index2-1,index7-1], degree=1, tag=6005) #verbindet Projektion mit Normale (kurz)
 
 
-Spandau.addBSpline(index5list[::-1], degree=3, tag=50000) #OriginalKringel
-Spandau.addBSpline(index7list, degree=3, tag=70000) #Projektion des Kringels
-Spandau.addBSpline(index6list[::-1], degree=3, tag=60000) #1.Normalenvektor
-Spandau.addBSpline(index8list, degree=3, tag=80000) #2.Normalenvektor
+    Spandau.addBSpline(index1list, degree=3, tag=10000) #OriginalKringel
+    Spandau.addBSpline(index3list, degree=3, tag=30000) #Projektion des Kringels
+    Spandau.addBSpline(index2list[::-1], degree=3, tag=20000) #1.Normalenvektor
+    Spandau.addBSpline(index4list[::-1], degree=3, tag=40000) #2.Normalenvektor
 
 
-
-#Volumen vom echten Kringel
-Spandau.addCurveLoop([5002, 60000, 6002, 40000], tag = 80000)
-Spandau.addCurveLoop([5003, 50000, 6003, 20000], tag = 80001)
-
-Spandau.addCurveLoop([5005, 5002, 5001, 30000, 6001, 6002, 6004, 80000], tag = 80002)
-Spandau.addCurveLoop([5004, 5003, 5000, 10000, 6000, 6003, 6005, 70000], tag = 80003)
+    Spandau.addBSpline(index5list[::-1], degree=3, tag=50000) #OriginalKringel
+    Spandau.addBSpline(index7list, degree=3, tag=70000) #Projektion des Kringels
+    Spandau.addBSpline(index6list[::-1], degree=3, tag=60000) #1.Normalenvektor
+    Spandau.addBSpline(index8list, degree=3, tag=80000) #2.Normalenvektor
 
 
-Spandau.addThruSections([80000, 80001],2)
-Spandau.addThruSections([80002, 80003],1)
+    
+    #Volumen vom echten Kringel
+    Spandau.addCurveLoop([5002, 60000, 6002, 80000], tag = 80000)
+    Spandau.addCurveLoop([5003, 50000, 6003, 70000], tag = 80001)
 
-Spandau.cut([(3,1)],[(3,2)],tag=-1)
+    Spandau.addCurveLoop([5005, 5002, 5001, 30000, 6001, 6002, 6004, 40000], tag = 80002)
+    Spandau.addCurveLoop([5004, 5003, 5000, 10000, 6000, 6003, 6005, 20000], tag = 80003)
 
 
+    Spandau.addThruSections([80000, 80001],2)
+    Spandau.addThruSections([80002, 80003],1)
+
+    Spandau.cut([(3,1)],[(3,2)],tag=-1)
+    
 
 """
 tooMuchSplines= (Spandau.getEntitiesInBoundingBox(-100, -100, -100, 100, 0, 100, dim=1))
@@ -654,6 +621,72 @@ Spandau.remove(tooMuchSplines, recursive=False)
 tooMuchPoints= (Spandau.getEntitiesInBoundingBox(-100, -100, -100, 100, 0, 100, dim=0))
 Spandau.remove(tooMuchPoints, recursive=False)
 """
+
+if (phase < 0.1 and phase >0):
+    
+    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -0.00001, wide - 0.01 , 1000, 1000, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
+    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000, -0.00001, -0.01 , 1000, 1000, 0.01)
+    
+    EntitiesOnGround = Spandau.getEntitiesInBoundingBox(-1000, -0.00001, -0.01, 1000, 0.00001, wide + 0.01)
+    
+    EntitiesInAir = Spandau.getEntitiesInBoundingBox(-1000, 0.00001, -0.01, 1000, 1000, wide + 0.01)
+    
+    
+    
+    SplinesInWide = []
+    SplinesInZero = []
+    AllSplinesOnGround = []
+    AllSplinesInAir = []
+    
+    for(x,y) in EntitiesOnGround:
+        if x==1:
+            AllSplinesOnGround.append(y)
+
+    for (x,y) in EntitiesInWide:
+        if x==1:
+            SplinesInWide.append(y)
+            
+    for (x,y) in EntitiesInZero:
+        if x==1:
+            SplinesInZero.append(y)
+
+    for (x,y) in EntitiesInAir:
+        if x==1:
+            AllSplinesInAir.append(y)
+
+    AllSmallAndMediumSplines = AllSplinesOnGround+AllSplinesInAir
+    AllSmallSplines = []
+
+    for i in AllSmallAndMediumSplines:
+        if i in SplinesInWide:
+            AllSmallSplines.append(i)
+            
+    for i in AllSmallAndMediumSplines:
+            if i in SplinesInZero:
+                AllSmallSplines.append(i)
+
+    AllMediumSplines = []        
+    
+    for i in AllSmallAndMediumSplines:
+        if i not in AllSmallSplines:
+            AllMediumSplines.append(i)
+
+    AllEntities = Spandau.getEntities()
+    AllSplines= []
+
+
+    for (x,y) in AllEntities:
+        if x==1:
+            AllSplines.append(y)
+    
+    
+    AllBigSplines = []
+
+    for i in AllSplines:
+        if i not in AllSmallAndMediumSplines:
+            AllBigSplines.append(i)
+
+    
 
 if (phase <= 1 and phase >=0.1):
     EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -1, wide - 0.01 , 1000, 1, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
@@ -679,15 +712,15 @@ if (phase <= 1 and phase >=0.1):
         if x==1:
             SplinesInZero.append(y)
 
-    AllSmallSplinesOnGround = SplinesInWide + SplinesInZero
+    AllSmallSplines = SplinesInWide + SplinesInZero
 
 
-    AllBigSplinesOnGround = []
+    AllMediumSplines = []
 
     for i in AllSplinesOnGround:
-        if i not in AllSmallSplinesOnGround:
-            AllBigSplinesOnGround.append(i)
-            
+        if i not in AllSmallSplines:
+            AllMediumSplines.append(i)
+
 
     AllEntities = Spandau.getEntities()
     AllSplines= []
@@ -697,24 +730,147 @@ if (phase <= 1 and phase >=0.1):
         if x==1:
             AllSplines.append(y)
 
-    AllCurvedSplines = []
+    AllBigSplines = []
 
     for i in AllSplines:
         if i not in AllSplinesOnGround:
-            AllCurvedSplines.append(i)
+            AllBigSplines.append(i)
 
 
+if (phase <= 2 and phase >1):
+    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -1, wide - 0.01 , 1000, 1, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
+    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000, -1, -0.01 , 1000, 1, 0.01)
 
+    EntitiesInXZero = Spandau.getEntitiesInBoundingBox(-1000, -1, -0.01, 0.1, 1000, wide + 0.01)
+    EntitiesInXWide = Spandau.getEntitiesInBoundingBox(0.1, -1, -0.01, 1000, 1000, wide + 0.01)
+
+    SplinesInWide = []
+    SplinesInZero = []
+    AllSplinesInXZero = []
+    AllSplinesInXWide = []
+
+    for(x,y) in EntitiesInXZero:
+        if x==1:
+            AllSplinesInXZero.append(y)
+            
+    for(x,y) in EntitiesInXWide:
+        if x==1:
+            AllSplinesInXWide.append(y)
+
+    for (x,y) in EntitiesInWide:
+        if x==1:
+            SplinesInWide.append(y)
+            
+    for (x,y) in EntitiesInZero:
+        if x==1:
+            SplinesInZero.append(y)
+
+    AllSmallAndMediumSplines = AllSplinesInXWide+AllSplinesInXZero
+    AllSmallSplines = []
+
+    for i in AllSmallAndMediumSplines:
+        if i in SplinesInWide:
+            AllSmallSplines.append(i)
+            
+    for i in AllSmallAndMediumSplines:
+            if i in SplinesInZero:
+                AllSmallSplines.append(i)
+
+    AllMediumSplines = []        
+    
+    for i in AllSmallAndMediumSplines:
+        if i not in AllSmallSplines:
+            AllMediumSplines.append(i)
+
+    AllEntities = Spandau.getEntities()
+    AllSplines= []
+
+
+    for (x,y) in AllEntities:
+        if x==1:
+            AllSplines.append(y)
+    
+    
+    AllBigSplines = []
+
+    for i in AllSplines:
+        if i not in AllSmallAndMediumSplines:
+            AllBigSplines.append(i)
+
+    
+if (phase <= 3 and phase >2):
+    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -1, wide - 0.01 , 1000, 1, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
+    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000, -1, -0.01 , 1000, 1, 0.01)
+
+    EntitiesInXZero = Spandau.getEntitiesInBoundingBox(-1000, -1, -0.01, 0.1, 1000, wide + 0.01)
+    EntitiesInXWide = Spandau.getEntitiesInBoundingBox(0.1, -1, -0.01, 1000, 1000, wide + 0.01)
+
+    SplinesInWide = []
+    SplinesInZero = []
+    AllSplinesInXZero = []
+    AllSplinesInXWide = []
+
+    for(x,y) in EntitiesInXZero:
+        if x==1:
+            AllSplinesInXZero.append(y)
+            
+    for(x,y) in EntitiesInXWide:
+        if x==1:
+            AllSplinesInXWide.append(y)
+
+    for (x,y) in EntitiesInWide:
+        if x==1:
+            SplinesInWide.append(y)
+            
+    for (x,y) in EntitiesInZero:
+        if x==1:
+            SplinesInZero.append(y)
+
+    AllSmallAndMediumSplines = AllSplinesInXWide+AllSplinesInXZero
+    AllSmallSplines = []
+
+    for i in AllSmallAndMediumSplines:
+        if i in SplinesInWide:
+            AllSmallSplines.append(i)
+            
+    for i in AllSmallAndMediumSplines:
+            if i in SplinesInZero:
+                AllSmallSplines.append(i)
+
+    AllMediumSplines = []        
+    
+    for i in AllSmallAndMediumSplines:
+        if i not in AllSmallSplines:
+            AllMediumSplines.append(i)
+    print(AllMediumSplines)
+    AllEntities = Spandau.getEntities()
+    AllSplines= []
+
+
+    for (x,y) in AllEntities:
+        if x==1:
+            AllSplines.append(y)
+    
+    
+    AllBigSplines = []
+
+    for i in AllSplines:
+        if i not in AllSmallAndMediumSplines:
+            AllBigSplines.append(i)
+    
+    
 Spandau.synchronize()
 
-if (phase <= 1 and phase >=0.1):
-    for y in AllSmallSplinesOnGround:
+
+
+if (phase <= 3 and phase >0):
+    for y in AllSmallSplines:
             gmsh.model.mesh.setTransfiniteCurve(y, 3)
 
-    for y in AllBigSplinesOnGround:
+    for y in AllMediumSplines:
             gmsh.model.mesh.setTransfiniteCurve(y, 20)
 
-    for y in AllCurvedSplines:
+    for y in AllBigSplines:
             gmsh.model.mesh.setTransfiniteCurve(y, 50)
 
 
@@ -744,56 +900,56 @@ file.close()
 OriginalKringelInZList = np.array(coords2)
 file = open("OriginalKringelCoordsInZ", "w+")
 content2 = str(OriginalKringelInZList)
-content2 = content.replace("[","")
-content2 = content.replace("]","")
+content2 = content2.replace("[","")
+content2 = content2.replace("]","")
 file.write(content2)
 file.close()
 
 FirstNormalList = np.array(coords3n)
 file = open("FirstNormalCoords", "w+")
 content3 = str(FirstNormalList)
-content3 = content.replace("[","")
-content3 = content.replace("]","")
+content3 = content3.replace("[","")
+content3 = content3.replace("]","")
 file.write(content3)
 file.close()
 
 FirstNormalInZList = np.array(coords3nb)
 file = open("FirstNormalCoordsInZ", "w+")
 content4 = str(FirstNormalInZList)
-content4 = content.replace("[","")
-content4 = content.replace("]","")
+content4 = content4.replace("[","")
+content4 = content4.replace("]","")
 file.write(content4)
 file.close()
 
-ScndNormalList = np.array(coords1n)
+ScndNormalList = np.array(coords4n)
 file = open("ScndNormalCoords", "w+")
 content5 = str(ScndNormalList)
-content5 = content.replace("[","")
-content5 = content.replace("]","")
+content5 = content5.replace("[","")
+content5 = content5.replace("]","")
 file.write(content5)
 file.close()
 
-ScndNormalInZList = np.array(coords2n)
+ScndNormalInZList = np.array(coords4nb)
 file = open("ScndNormalCoordsInZ", "w+")
 content6 = str(ScndNormalInZList)
-content6 = content.replace("[","")
-content6 = content.replace("]","")
+content6 = content6.replace("[","")
+content6 = content6.replace("]","")
 file.write(content6)
 file.close()
 
-ThirdNormalList = np.array(coords4n)
+ThirdNormalList = np.array(coords1n)
 file = open("ThirdNormalCoords", "w+")
 content7 = str(ThirdNormalList)
-content = content.replace("[","")
-content = content.replace("]","")
+content7 = content7.replace("[","")
+content7 = content7.replace("]","")
 file.write(content7)
 file.close()    
 
-ThirdNormalInZList = np.array(coords4nb)
+ThirdNormalInZList = np.array(coords2n)
 file = open("ThirdNormalCoordsInZ", "w+")
 content8 = str(ThirdNormalInZList)
-content = content.replace("[","")
-content = content.replace("]","")
+content8 = content8.replace("[","")
+content8 = content8.replace("]","")
 file.write(content8)
 file.close()
 
