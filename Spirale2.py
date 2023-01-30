@@ -955,8 +955,11 @@ file.close()
 
 
 
-gmsh.model.mesh.generate(1)
+gmsh.model.mesh.generate(3)
 gmsh.write("Spirale.msh")
+gmsh.write("Spirale.geo_unrolled")
+gmsh.write("Spirale.unv")
+gmsh.write("Spirale.brep")
 gmsh.fltk.run()
 gmsh.clear()
 gmsh.finalize()
