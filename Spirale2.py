@@ -664,12 +664,12 @@ Spandau.remove(tooMuchPoints, recursive=False)
 
 if (phase < 0.1 and phase >0 and showcase == False):
     
-    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -0.00001 - VerschiebungY, wide - 0.01 , 1000 - VerschiebungX, 1000 - VerschiebungY, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
-    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -0.00001 - VerschiebungY, -0.01 , 1000 - VerschiebungX, 1000 - VerschiebungY, 0.01)
+    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, wide - 0.01 , 1000, 1000, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
+    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, -0.01 , 1000, 1000, 0.01)
     
-    EntitiesOnGround = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -0.00001 - VerschiebungY, -0.01, 1000 - VerschiebungX, 0.00001 - VerschiebungY, wide + 0.01)
+    EntitiesOnGround = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, -0.01, 1000, 0.01 - VerschiebungY, wide + 0.01)
     
-    EntitiesInAir = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, 0.00001 - VerschiebungY, -0.01, 1000 - VerschiebungX, 1000 - VerschiebungY, wide + 0.01)
+    EntitiesInAir = Spandau.getEntitiesInBoundingBox(-1000, 0.01 - VerschiebungY, -0.01, 1000, 1000, wide + 0.01)
     
     
     
@@ -730,9 +730,9 @@ if (phase < 0.1 and phase >0 and showcase == False):
 
 if (phase <= 1 and phase >=0.1 and showcase == False):
     EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, wide - 0.01 , 1000- VerschiebungX, 1 - VerschiebungY, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
-    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000- VerschiebungX, -1 - VerschiebungY, -0.01 , 1000- VerschiebungX, 1 - VerschiebungY, 0.01)
+    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, -0.01 , 1000, 0.01 - VerschiebungY, 0.01)
 
-    EntitiesOnGround = Spandau.getEntitiesInBoundingBox(-1000- VerschiebungX, -1 - VerschiebungY, -0.01, 1000- VerschiebungX, 1 - VerschiebungY, wide + 0.01)
+    EntitiesOnGround = Spandau.getEntitiesInBoundingBox(-1000- VerschiebungX, -0.01 - VerschiebungY, -0.01, 1000- VerschiebungX, 0.01 - VerschiebungY, wide + 0.01)
 
 
     SplinesInWide = []
@@ -778,11 +778,11 @@ if (phase <= 1 and phase >=0.1 and showcase == False):
 
 
 if (phase <= 2 and phase >1 and showcase == False):
-    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, wide - 0.01 , 1000 - VerschiebungX, 1 - VerschiebungY, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
+    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -1 - VerschiebungY, wide - 0.01 , 1000, 1 - VerschiebungY, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
     EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, -0.01 , 1000 - VerschiebungX, 1 - VerschiebungY, 0.01)
 
-    EntitiesInXZero = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, -0.01, 0.1- VerschiebungX, 1000 - VerschiebungY, wide + 0.01)
-    EntitiesInXWide = Spandau.getEntitiesInBoundingBox(0.1 - VerschiebungX, -1 - VerschiebungY, -0.01, 1000 - VerschiebungX, 1000 - VerschiebungY, wide + 0.01)
+    EntitiesInXZero = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, -0.01, 1- VerschiebungX, 1000 - VerschiebungY, wide + 0.01)
+    EntitiesInXWide = Spandau.getEntitiesInBoundingBox(1 - VerschiebungX, -0.01 - VerschiebungY, -0.01, 1000, 1000 - VerschiebungY, wide + 0.01)
 
     SplinesInWide = []
     SplinesInZero = []
@@ -839,11 +839,11 @@ if (phase <= 2 and phase >1 and showcase == False):
 
     
 if (phase <= 3 and phase >2 and showcase == False):
-    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, wide - 0.01 , 1000 - VerschiebungX, 1 - VerschiebungY, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
-    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, -0.01 , 1000 - VerschiebungX, 1 - VerschiebungY, 0.01)
+    EntitiesInWide = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, wide - 0.01 , 1000, 0.01 - VerschiebungY, wide + 0.01) # Kurzen Splines und Punkte auf z = wide Ebene
+    EntitiesInZero = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, -0.01 , 1000, 0.01 - VerschiebungY, 0.01)
 
-    EntitiesInXZero = Spandau.getEntitiesInBoundingBox(-1000 - VerschiebungX, -1 - VerschiebungY, -0.01, 0.1 - VerschiebungX, 1000 - VerschiebungY, wide + 0.01)
-    EntitiesInXWide = Spandau.getEntitiesInBoundingBox(0.1 - VerschiebungX, -1 - VerschiebungY, -0.01, 1000 - VerschiebungX, 1000 - VerschiebungY, wide + 0.01)
+    EntitiesInXZero = Spandau.getEntitiesInBoundingBox(-1000, -0.01 - VerschiebungY, -0.01, 0.01 - VerschiebungX, 1000, wide + 0.01)
+    EntitiesInXWide = Spandau.getEntitiesInBoundingBox(0.01 - VerschiebungX, -0.01 - VerschiebungY, -0.01, 1000, 1000, wide + 0.01)
 
     SplinesInWide = []
     SplinesInZero = []
@@ -910,28 +910,7 @@ if (phase <= 3 and phase >2 and showcase == False):
     
     finishCylinder = False
     indexC = 101010
-    """
-    while(finishCylinder == False):
-        Spandau.addCylinder(xStart , yFloor+radiusCurrent, 0, 0, 0, wide, radiusCurrent, tag=indexC)
-        xmin, ymin, zmin, xmax, ymax, zmax = Spandau.getBoundingBox(3, indexC)
-        cylinderPoints = Spandau.getEntitiesInBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax, dim=0)
-        cylinderSplines = Spandau.getEntitiesInBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax, dim=1)
-        cylinderSurfaces = Spandau.getEntitiesInBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax, dim=2)
-        cylinderVolumes = Spandau.getEntitiesInBoundingBox(xmin, ymin, zmin, xmax, ymax, zmax, dim=3)
-        if len(cylinderPoints) >= 4:
-            print(cylinderPoints)
-            Spandau.remove(cylinderPoints)
-            print(cylinderSplines)
-            Spandau.remove(cylinderSplines)
-            print(cylinderSurfaces)
-            Spandau.remove(cylinderSurfaces)
-            print(cylinderVolumes)
-            Spandau.remove(cylinderVolumes)
-            xStart-=0.1
-            indexC+=1
-        else:
-            finishCylinder = True
-       """     
+    
 
     radiusProgress = finalList[6]
     radiusMin = (thick+thickTransfi+thickTransfi)
@@ -941,7 +920,7 @@ if (phase <= 3 and phase >2 and showcase == False):
     Spandau.addCylinder(xStart - radiusCurrent , yFloor+radiusCurrent, 0, 0, 0, wide, radiusCurrent, tag=101010)
     Spandau.addCylinder(xStart - radiusCurrent , yFloor+radiusCurrent, 0, 0, 0, wide, radiusCurrent-thickTransfi, tag=202020)
     Spandau.cut([(3,101010)],[(3,202020)],tag=303030)
-    Spandau.addCylinder(xStart - radiusCurrent , yFloor+radiusCurrent, 0, 0, 0, wide, radiusCurrent-thickTransfi-thick, tag=404040)
+
 
    
     AllEntitiesCyl = Spandau.getEntities()
@@ -995,20 +974,19 @@ if (showcase == False):
         for y in AllSplinesOnlyCyl:
             gmsh.model.mesh.setTransfiniteCurve(y, 20)
         
-           
+        gmsh.model.mesh.setTransfiniteAutomatic()
+        """
         gmsh.model.mesh.setTransfiniteSurface(13)
         gmsh.model.mesh.setTransfiniteSurface(14)
         gmsh.model.mesh.setTransfiniteSurface(15)
         gmsh.model.mesh.setTransfiniteSurface(16)
-        gmsh.model.mesh.setTransfiniteSurface(17)
-        gmsh.model.mesh.setTransfiniteSurface(18)
-        gmsh.model.mesh.setTransfiniteSurface(19)
+
         
             
             
             
         gmsh.model.mesh.setTransfiniteVolume(303030)
-        gmsh.model.mesh.setTransfiniteVolume(404040)
+        """
 
 if (showcase == False):
     OriginalKringelList = np.array(coords1)
@@ -1076,7 +1054,7 @@ if (showcase == False):
     file.close()
 
 
-if (showcase == False or (phase <= 3 and phase >2)):
+if (showcase == True or (phase <= 3 and phase >2)):
     gmsh.model.mesh.generate(1)
 else:
     gmsh.model.mesh.generate(3)
