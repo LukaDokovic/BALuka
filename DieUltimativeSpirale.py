@@ -131,6 +131,8 @@ if (phase > 3):
 
 
     gmsh.model.mesh.generate(3)
+    gmsh.write("Spirale.msh")
+    gmsh.write("Spirale.stl")
     gmsh.fltk.run()
     gmsh.clear()
     gmsh.finalize()
@@ -1169,9 +1171,8 @@ if (phase <= 3):
         
     if (showcase == False):
         gmsh.write("Spirale.msh")
-        gmsh.write("Spirale.geo_unrolled")
-        gmsh.write("Spirale.unv")
-        gmsh.write("Spirale.brep")
+        gmsh.write("Spirale.stl")
+
         
     gmsh.fltk.run()
     gmsh.clear()
