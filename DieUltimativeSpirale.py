@@ -23,11 +23,15 @@ if askmodification == "J":
 else: 
     modiBool = False
 
-asktime = input("Wie viel Uhr? (0-3) ")
+asktime = input("Wie viel Uhr? (0-4) ")
 phase = float(asktime)
-
+"""
 askthick = input("Spandicke? (Empfehlung: 0.1) ")
 thick = float(askthick)
+"""
+thick = 0.1
+
+
 
 askquantity = input("Wie viele Elemente auf Hauptspline? Jeder weitere Spline jeweils plus 1 Element (Empfehlung: 50) ")
 quantity = int(askquantity)
